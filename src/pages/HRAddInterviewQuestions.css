@@ -1,0 +1,405 @@
+/* HRAddInterviewQuestions.css */
+
+/* ==================== BASE STYLES ==================== */
+.hr-interview-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+  transition: box-shadow 0.2s ease;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.hr-interview-card:hover {
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* ==================== HEADER ==================== */
+.hr-interview-card .card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 2px solid #e3e6f0;
+  padding: 1.25rem 1.5rem;
+}
+
+/* ==================== STATUS BADGES ==================== */
+.interview-status-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.status-started {
+  background-color: #fff2f0;
+  color: #cf1322;
+  border-color: #ffccc7;
+}
+
+.status-upcoming {
+  background-color: #f6ffed;
+  color: #389e0d;
+  border-color: #b7eb8f;
+}
+
+.status-unknown {
+  background-color: #fafafa;
+  color: #595959;
+  border-color: #d9d9d9;
+}
+
+.status-draft {
+  background-color: #f0f0f0;
+  color: #434343;
+  border-color: #d9d9d9;
+}
+
+/* ==================== FORM STYLES ==================== */
+.hr-interview-form .hr-interview-form-control,
+.hr-interview-form .hr-interview-form-select {
+  border: 1px solid #d1d7e0;
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+}
+
+.hr-interview-form .hr-interview-form-control:focus,
+.hr-interview-form .hr-interview-form-select:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+  outline: none;
+}
+
+.hr-interview-form .form-label {
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.hr-interview-form .form-text {
+  font-size: 0.85rem;
+  color: #8c8c8c;
+  margin-top: 0.375rem;
+}
+
+/* Required field indicator */
+.required-field::after {
+  content: " *";
+  color: #ff4d4f;
+}
+
+/* ==================== MCQ OPTIONS ==================== */
+.mcq-option-container {
+  background-color: #fafbfc;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+  animation: slideIn 0.3s ease;
+}
+
+.mcq-option-container:hover {
+  background-color: #f5f7fa;
+  border-color: #d9d9d9;
+}
+
+.mcq-option-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  accent-color: #1890ff;
+}
+
+.mcq-option-checkbox:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Option letter styling */
+.input-group-text.bg-light {
+  background-color: #f5f5f5 !important;
+  color: #595959;
+  font-weight: 600;
+  min-width: 36px;
+  justify-content: center;
+  border-color: #d9d9d9;
+}
+
+/* ==================== KEYWORDS STYLING ==================== */
+.keywords-input {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.875rem;
+  background-color: #fafafa;
+}
+
+.keywords-tag {
+  display: inline-block;
+  background-color: #e6f7ff;
+  color: #0050b3;
+  padding: 0.25rem 0.75rem;
+  margin: 0.125rem;
+  border-radius: 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #91d5ff;
+}
+
+/* ==================== ALERT STYLES ==================== */
+.hr-interview-alert {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 1rem 1.25rem;
+}
+
+.hr-interview-alert-warning {
+  background-color: #fffbe6;
+  border-color: #ffe58f;
+  color: #d48806;
+}
+
+.hr-interview-alert-danger {
+  background-color: #fff2f0;
+  border-color: #ffccc7;
+  color: #cf1322;
+}
+
+.hr-interview-alert-success {
+  background-color: #f6ffed;
+  border-color: #b7eb8f;
+  color: #389e0d;
+}
+
+.hr-interview-alert-info {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+  color: #0050b3;
+}
+
+/* ==================== BUTTON STYLES ==================== */
+.hr-interview-btn {
+  border-radius: 8px;
+  padding: 0.625rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hr-interview-btn-primary {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: white;
+  border: none;
+}
+
+.hr-interview-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #096dd9 0%, #0050b3 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.hr-interview-btn-primary:disabled {
+  background: #f5f5f5;
+  color: #bfbfbf;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.hr-interview-btn-secondary {
+  background-color: #ffffff;
+  border-color: #d9d9d9;
+  color: #262626;
+  border: 1px solid #d9d9d9;
+}
+
+.hr-interview-btn-secondary:hover:not(:disabled) {
+  background-color: #f5f5f5;
+  border-color: #bfbfbf;
+  color: #000000;
+}
+
+.hr-interview-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== LOADING SPINNER ==================== */
+.interview-loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 0.2em;
+  border-color: #1890ff transparent #1890ff transparent;
+  animation: spinner 0.8s linear infinite;
+}
+
+@keyframes spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== QUESTION SECTIONS ==================== */
+.question-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.question-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 1rem;
+}
+
+/* ==================== CUSTOM SCROLLBAR ==================== */
+.hr-interview-form textarea {
+  scrollbar-width: thin;
+  scrollbar-color: #bfbfbf #f5f5f5;
+}
+
+.hr-interview-form textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hr-interview-form textarea::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.hr-interview-form textarea::-webkit-scrollbar-thumb {
+  background-color: #bfbfbf;
+  border-radius: 4px;
+}
+
+.hr-interview-form textarea::-webkit-scrollbar-thumb:hover {
+  background-color: #8c8c8c;
+}
+
+/* ==================== FOCUS STATES ==================== */
+.hr-interview-form input:focus-visible,
+.hr-interview-form select:focus-visible,
+.hr-interview-form textarea:focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: 2px;
+}
+
+/* ==================== DISABLED STATES ==================== */
+.hr-interview-form .hr-interview-form-control:disabled,
+.hr-interview-form .hr-interview-form-select:disabled {
+  background-color: #fafafa;
+  color: #8c8c8c;
+  cursor: not-allowed;
+  border-color: #f0f0f0;
+}
+
+/* ==================== MODAL STYLES ==================== */
+.modal-content.hr-interview-card {
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #e3e6f0;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+.pre-line {
+  white-space: pre-line;
+}
+
+.min-vh-50 {
+  min-height: 50vh;
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 768px) {
+  .hr-interview-card .card-header {
+    padding: 1rem;
+  }
+  
+  .hr-interview-card .card-body {
+    padding: 1rem !important;
+  }
+  
+  .hr-interview-btn {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+  }
+  
+  .mcq-option-container {
+    padding: 0.75rem;
+  }
+  
+  .question-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+  
+  .interview-status-badge {
+    padding: 0.25rem 0.65rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* Remove button hover effect on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .hr-interview-btn-primary:hover:not(:disabled),
+  .hr-interview-btn-secondary:hover:not(:disabled) {
+    transform: none;
+  }
+  
+  .mcq-option-container:hover {
+    background-color: #fafbfc;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .hr-interview-card {
+    background-color: #1f1f1f;
+    border-color: #2d2d2d;
+  }
+  
+  .hr-interview-card .card-header {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1f1f1f 100%);
+    border-color: #404040;
+  }
+  
+  .hr-interview-form .hr-interview-form-control,
+  .hr-interview-form .hr-interview-form-select {
+    background-color: #2d2d2d;
+    border-color: #404040;
+    color: #ffffff;
+  }
+  
+  .hr-interview-form .form-label {
+    color: #e0e0e0;
+  }
+  
+  .mcq-option-container {
+    background-color: #2d2d2d;
+    border-color: #404040;
+  }
+}
