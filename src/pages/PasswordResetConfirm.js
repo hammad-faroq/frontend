@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import  { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { confirmPasswordReset } from "../services/api";
 
@@ -104,7 +104,7 @@ function PasswordResetConfirm() {
         <div style={styles.successContainer}>
           <div style={styles.successIcon}>🎉</div>
           <h2 style={styles.successTitle}>Password Reset Successful!</h2>
-          <p style={styles.successMessage}>
+          <p style={styles.successtext}>
             Your password has been successfully reset. You can now login with your new password.
           </p>
           <div style={styles.countdown}>
@@ -413,7 +413,7 @@ const styles = {
     fontWeight: "bold",
     marginBottom: "15px"
   },
-  successMessage: {
+  successtext: {
     color: "#555",
     fontSize: "18px",
     lineHeight: "1.6",

@@ -1,5 +1,5 @@
 // src/pages/JobSeekerUploadResume.js - Updated with Sidebar
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getResumeAnalysis } from "../services/api";
 import Sidebar from "../components/Sidebar";

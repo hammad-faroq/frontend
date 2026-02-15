@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { logoutUser } from "../services/api";
-import { InterviewApi } from "../services/InterviewApi";
+// import { InterviewApi } from "../services/InterviewApi";
 
 function JobSeekerInterviewResult() {
   const { id } = useParams();

@@ -379,7 +379,7 @@ export const checkApplicationStatus = async (jobId) => {
       console.log("Application status endpoint not found, using fallback");
       const appliedJobs = await getAppliedJobs();
       const applied = Array.isArray(appliedJobs) 
-        ? appliedJobs.some(job => job.job_id == jobId)
+        ? appliedJobs.some(job => Number(job.job_id) === Number(jobId))
         : false;
       return { applied, submitted_at: null };
     }
@@ -392,7 +392,7 @@ export const checkApplicationStatus = async (jobId) => {
     try {
       const appliedJobs = await getAppliedJobs();
       const applied = Array.isArray(appliedJobs) 
-        ? appliedJobs.some(job => job.job_id == jobId)
+        ? appliedJobs.some(job => Number(job.job_id) === Number(jobId))
         : false;
       return { applied, submitted_at: null };
     } catch (fallbackError) {
