@@ -1,10 +1,10 @@
 import axios from "axios";
 // ---------------- Base URLs ----------------
-const BASE_URL = "http://127.0.0.1:8000/accounts";
-const BASE_API_URL = "http://127.0.0.1:8000/api";
+const BASE_URL = "https://backendfyp-production-00a3.up.railway.app/accounts";
+const BASE_API_URL = "https://backendfyp-production-00a3.up.railway.app/api";
 const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
-const BASE_CV_URL = "http://127.0.0.1:8000/cv_manager"
-const BASE_INTERVIEW_URL = "http://127.0.0.1:8000/api/interview";
+const BASE_CV_URL = "https://backendfyp-production-00a3.up.railway.app/cv_manager"
+const BASE_INTERVIEW_URL = "https://backendfyp-production-00a3.up.railway.app/api/interview";
 
 /* ---------------- Utility: Auth Helpers ---------------- */
 const getAuthHeaders = () => {

@@ -104,7 +104,7 @@ function JobSeekerDashboard() {
       // Try to fetch additional interviews
       let additionalInterviews = [];
       try {
-        const response = await fetch("http://localhost:8000/api/interview/candidate/upcoming-interviews/", {
+        const response = await fetch("https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/upcoming-interviews/", {
           headers: { 
             "Authorization": `Token ${token}`,
             "Content-Type": "application/json"

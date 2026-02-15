@@ -200,7 +200,7 @@ function InterviewDashboard() {
         return;
       }
       
-      const response = await fetch('http://localhost:8000/api/interview/interviews/', {
+      const response = await fetch('https://backendfyp-production-00a3.up.railway.app/interview/interviews/', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -274,7 +274,7 @@ function InterviewDashboard() {
                   role,
                   tokenExists: !!(localStorage.getItem('access_token') || localStorage.getItem('token')),
                   user_id: localStorage.getItem('user_id'),
-                  backendUrl: 'http://localhost:8000/api/interview/interviews/',
+                  backendUrl: 'https://backendfyp-production-00a3.up.railway.app/api/interview/interviews/',
                   debugInfo
                 }, null, 2)}
               </pre>

@@ -35,7 +35,7 @@ function JobSeekerUploadResume() {
 
     try {
       setUploading(true);
-      const res = await fetch("http://localhost:8000/cv_manager/resume/upload/", {
+      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/cv_manager/resume/upload/", {
         method: "POST",
         headers: { Authorization: `Token ${token}` },
         body: formData,
@@ -342,7 +342,7 @@ function JobSeekerUploadResume() {
               <h3 className="font-semibold mb-3">Need help with your resume?</h3>
               <p className="text-blue-100 mb-4">Create a professional resume with our built-in CV builder</p>
               <button
-                onClick={() => window.open("http://localhost:8000/cv_manager/", "_blank")}
+                onClick={() => window.open("https://backendfyp-production-00a3.up.railway.app/cv_manager/", "_blank")}
                 className="w-full bg-white text-blue-600 font-medium py-2 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 Open CV Builder

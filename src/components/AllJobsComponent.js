@@ -13,7 +13,7 @@ const AllJobsComponent = () => {
   const [applyError, setApplyError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const API_BASE_URL = 'http://localhost:8000/api/jobs';
+  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
   const currentUser = getCurrentUser();
 
   useEffect(() => {

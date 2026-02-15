@@ -64,7 +64,7 @@ function JobSeekerJobs() {
       formData.append("resume", file);
 
       try {
-        const res = await fetch(`http://localhost:8000/api/jobs/${job.id}/apply/`, {
+        const res = await fetch(`https://backendfyp-production-00a3.up.railway.app/api/jobs/${job.id}/apply/`, {
           method: "POST",
           headers: { Authorization: `Token ${token}` },
           body: formData,

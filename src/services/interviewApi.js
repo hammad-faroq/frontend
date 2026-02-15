@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // ---------------- Base URL ----------------
-const BASE_API_URL = "http://127.0.0.1:8000/api/interview";
+const BASE_API_URL = 'https://backendfyp-production-00a3.up.railway.app/api/interview';
 
 // ---------------- Auth Helpers ----------------
 const getAuthHeaders = () => {

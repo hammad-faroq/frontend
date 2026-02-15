@@ -28,7 +28,7 @@ const NotificationPreferences = () => {
   const fetchPreferences = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/notifications/preferences/my_preferences/', {
+      const response = await axios.get('https://backendfyp-production-00a3.up.railway.app/api/notifications/preferences/my_preferences/', {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -59,7 +59,7 @@ const NotificationPreferences = () => {
       setMessage(null);
       
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:8000/api/notifications/preferences/my_preferences/', preferences, {
+      await axios.put('https://backendfyp-production-00a3.up.railway.app/api/notifications/preferences/my_preferences/', preferences, {
         headers: {
           Authorization: `Token ${token}`,
         },

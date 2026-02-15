@@ -191,11 +191,11 @@ function JobSeekerInterviewDetail() {
     }
 
     const endpoints = [
-      `http://localhost:8000/api/interview/candidate/interviews/${id}/`,
-      `http://localhost:8000/api/interviews/${id}/`,
-      `http://localhost:8000/api/interviews/candidate/${id}/`,
-      `http://localhost:8000/api/candidate/interviews/${id}/`,
-      `http://localhost:8000/api/interview/${id}/`,
+      `https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interviews/${id}/`,
+      `https://backendfyp-production-00a3.up.railway.app/api/interviews/${id}/`,
+      `https://backendfyp-production-00a3.up.railway.app/api/interviews/candidate/${id}/`,
+      `https://backendfyp-production-00a3.up.railway.app/api/candidate/interviews/${id}/`,
+      `https://backendfyp-production-00a3.up.railway.app/api/interview/${id}/`,
     ];
 
     let response = null;
@@ -252,10 +252,10 @@ function JobSeekerInterviewDetail() {
       const token = localStorage.getItem("token");
       
       const feedbackEndpoints = [
-        `http://localhost:8000/api/interview/candidate/interviews/${interviewId}/feedback/`,
-        `http://localhost:8000/api/interviews/${interviewId}/feedback/`,
-        `http://localhost:8000/api/candidate/interviews/${interviewId}/feedback/`,
-        `http://localhost:8000/api/interview/feedback/${interviewId}/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interviews/${interviewId}/feedback/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/interviews/${interviewId}/feedback/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/candidate/interviews/${interviewId}/feedback/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/interview/feedback/${interviewId}/`,
       ];
 
       for (const endpoint of feedbackEndpoints) {
@@ -354,7 +354,7 @@ function JobSeekerInterviewDetail() {
       const token = localStorage.getItem("token");
       console.log("Using token for fallback:", token ? "Yes (length: " + token.length + ")" : "No");
       
-      const response = await fetch(`http://localhost:8000/api/interview/candidate/interview/${id}/start/`, {
+      const response = await fetch(`https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interview/${id}/start/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,

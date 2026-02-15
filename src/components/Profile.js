@@ -46,7 +46,7 @@ function Profile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://127.0.0.1:8000/api/profile/", {
+      const response = await axios.get("https://backendfyp-production-00a3.up.railway.app/api/profile/", {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -55,12 +55,12 @@ function Profile() {
       setUser({
         ...response.data,
         profile_picture_url: response.data.profile_picture 
-          ? `http://127.0.0.1:8000${response.data.profile_picture}` 
+          ? `https://backendfyp-production-00a3.up.railway.app${response.data.profile_picture}` 
           : null
       });
       
       // Fetch additional emails
-      const emailResponse = await axios.get("http://127.0.0.1:8000/api/profile/emails/", {
+      const emailResponse = await axios.get("https://backendfyp-production-00a3.up.railway.app/api/profile/emails/", {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -68,7 +68,7 @@ function Profile() {
       setAdditionalEmails(emailResponse.data);
       
       // Fetch profile summary for completion percentage
-      const summaryResponse = await axios.get("http://127.0.0.1:8000/api/profile/summary/", {
+      const summaryResponse = await axios.get("https://backendfyp-production-00a3.up.railway.app/api/profile/summary/", {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -117,7 +117,7 @@ function Profile() {
     }
 
     try {
-      const response = await axios.put("http://127.0.0.1:8000/api/profile/", formData, {
+      const response = await axios.put("https://backendfyp-production-00a3.up.railway.app/api/profile/", formData, {
         headers: {
           Authorization: `Token ${token}`,
           "Content-Type": "multipart/form-data",
@@ -127,7 +127,7 @@ function Profile() {
       setUser({
         ...response.data.profile,
         profile_picture_url: response.data.profile.profile_picture 
-          ? `http://127.0.0.1:8000${response.data.profile.profile_picture}` 
+          ? `https://backendfyp-production-00a3.up.railway.app${response.data.profile.profile_picture}` 
           : null
       });
       
@@ -168,7 +168,7 @@ function Profile() {
 
     try {
       await axios.post(
-        "http://127.0.0.1:8000/api/profile/emails/",
+        "https://backendfyp-production-00a3.up.railway.app/api/profile/emails/",
         { email: newEmail },
         {
           headers: {
@@ -190,7 +190,7 @@ function Profile() {
   const handleSetPrimaryEmail = async (emailId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/profile/emails/${emailId}/set-primary/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/profile/emails/${emailId}/set-primary/`,
         {},
         {
           headers: {
@@ -211,7 +211,7 @@ function Profile() {
   const handleVerifyEmail = async (emailId) => {
     try {
       await axios.post(
-        `http://127.0.0.1:8000/api/profile/emails/${emailId}/verify/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/profile/emails/${emailId}/verify/`,
         {},
         {
           headers: {
@@ -236,7 +236,7 @@ function Profile() {
 
     try {
       await axios.delete(
-        `http://127.0.0.1:8000/api/profile/emails/${emailId}/delete/`,
+        `https://backendfyp-production-00a3.up.railway.app/api/profile/emails/${emailId}/delete/`,
         {
           headers: {
             Authorization: `Token ${token}`,

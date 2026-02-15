@@ -219,7 +219,7 @@ function MatchesPage() {
         setApplyingJobId(job.job_id);
         
         // Try the standard endpoint
-        const endpoint = `http://127.0.0.1:8000/api/jobs/${job.job_id}/apply/`;
+        const endpoint = `https://backendfyp-production-00a3.up.railway.app/api/jobs/${job.job_id}/apply/`;
         
         const res = await fetch(endpoint, {
           method: "POST",

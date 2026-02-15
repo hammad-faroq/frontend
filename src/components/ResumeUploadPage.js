@@ -12,7 +12,7 @@ function ResumeUploadPage() {
   const fetchResume = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://127.0.0.1:8000/api/jobs/resume/", {
+      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
         headers: { Authorization: `Token ${token}` },
       });
       const data = await res.json();
@@ -29,7 +29,7 @@ function ResumeUploadPage() {
     formData.append("resume", file);
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/jobs/resume/", {
+      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
         method: "POST",
         headers: { Authorization: `Token ${token}` },
         body: formData,
@@ -49,7 +49,7 @@ function ResumeUploadPage() {
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/jobs/resume/", {
+      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
         method: "DELETE",
         headers: { Authorization: `Token ${token}` },
       });

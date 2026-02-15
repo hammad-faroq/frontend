@@ -1,5 +1,6 @@
 // src/services/jobService.js
-const API_BASE_URL = 'http://localhost:8000/api/jobs';
+const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+
 
 class JobService {
   // Get authentication headers

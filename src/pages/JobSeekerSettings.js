@@ -18,7 +18,7 @@ function JobSeekerSettings() {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/accounts/settings/", {
+      const response = await fetch("https://backendfyp-production-00a3.up.railway.app/accounts/settings/", {
         method: "PUT",
         headers: {
           "Authorization": `Token ${token}`,

@@ -14,7 +14,7 @@ const MyJobsComponent = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const navigate = useNavigate();
 
-  const API_BASE_URL = 'http://localhost:8000/api/jobs';
+  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
 
   const currentUser = getCurrentUser();
 
