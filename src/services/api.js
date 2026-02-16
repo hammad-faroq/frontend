@@ -6,6 +6,24 @@ const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
 const BASE_CV_URL = "https://backendfyp-production-00a3.up.railway.app/cv_manager"
 const BASE_INTERVIEW_URL = "https://backendfyp-production-00a3.up.railway.app/api/interview";
 
+/* ---------------- Huggug face deployed mdoels ---------------- */
+export const triggerResumeAnalysis = async (jobApplicationId) => {
+  const response = await api.post("/resumedata/analyze/", {
+    job_application_id: jobApplicationId,
+  });
+  return response.data;
+};
+
+export const getAnalysisStatus = async (jobApplicationId) => {
+  const response = await api.get(`/resumedata/analysis-status/${jobApplicationId}/`);
+  return response.data;
+};
+
+export const getDetailedAnalysis = async (jobApplicationId) => {
+  const response = await api.get(`/resumedata/detailed-analysis/${jobApplicationId}/`);
+  return response.data;
+};
+
 /* ---------------- Utility: Auth Helpers ---------------- */
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
@@ -379,7 +397,7 @@ export const checkApplicationStatus = async (jobId) => {
       console.log("Application status endpoint not found, using fallback");
       const appliedJobs = await getAppliedJobs();
       const applied = Array.isArray(appliedJobs) 
-        ? appliedJobs.some(job => Number(job.job_id) === Number(jobId))
+        ? appliedJobs.some(job => job.job_id == jobId)
         : false;
       return { applied, submitted_at: null };
     }
@@ -392,7 +410,7 @@ export const checkApplicationStatus = async (jobId) => {
     try {
       const appliedJobs = await getAppliedJobs();
       const applied = Array.isArray(appliedJobs) 
-        ? appliedJobs.some(job => Number(job.job_id) === Number(jobId))
+        ? appliedJobs.some(job => job.job_id == jobId)
         : false;
       return { applied, submitted_at: null };
     } catch (fallbackError) {

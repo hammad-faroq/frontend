@@ -25,6 +25,11 @@ function HRJobApplications() {
   const [jobDeadline, setJobDeadline] = useState(null);
   const [shortlistCount, setShortlistCount] = useState(10);
   const navigate = useNavigate();
+  // const [jobs, setJobs] = useState([]);
+  // const [loading, setLoading] = useState(true);
+  const [selectedAnalysis, setSelectedAnalysis] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -74,6 +79,24 @@ function HRJobApplications() {
 
     fetchApplications();
   }, [jobId]);
+
+  // Poll backend for Gradio scores every 5 seconds
+useEffect(() => {
+  const interval = setInterval(() => {
+    // Check if any application has gradio_match_score === null
+    if (applications.some(app => app.gradio_match_score === null || app.gradio_match_score === undefined)) {
+      getJobApplications(jobId).then((data) => {
+        const allApps = data.applications || [];
+        allApps.sort((a, b) => (b.rank_score ?? 0) - (a.rank_score ?? 0));
+        setApplications(allApps);
+        setAllApplications(allApps);
+      }).catch(err => console.error("Failed to refresh Gradio scores:", err));
+    }
+  }, 5000); // poll every 5 seconds
+
+  return () => clearInterval(interval); // cleanup on unmount
+}, [applications, jobId]);
+
 
   // Function to filter applications based on entered count
   const filterApplications = () => {
@@ -404,7 +427,7 @@ function HRJobApplications() {
             )}
 
             {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 text-sm font-semibold text-gray-600 bg-gray-100 rounded-t-2xl p-4">
+            <div className="hidden md:grid grid-cols-12 gap-4 items-center text-sm font-semibold text-gray-600 bg-gray-100 rounded-t-2xl p-4">
               <div className="col-span-1 text-center">Rank</div>
               <div className="col-span-2">Applicant</div>
               <div className="col-span-2">Email</div>
@@ -412,9 +435,14 @@ function HRJobApplications() {
               <div className="col-span-1 text-center">Groq</div>
               <div className="col-span-1 text-center">BERT</div>
               <div className="col-span-1 text-center">Custom ML</div>
+
+              {/* ✅ ADD THIS */}
+              <div className="col-span-1 text-center">HF Model</div>
+
               <div className="col-span-1 text-center">CGPA</div>
               <div className="col-span-2 text-center">Actions</div>
             </div>
+
 
             {/* Applications List */}
             <div className="bg-white rounded-b-2xl shadow overflow-hidden">
@@ -432,6 +460,7 @@ function HRJobApplications() {
                 const groqRank = app.groq_rank ?? 0;
                 const bertScore = app.bert_similarity ?? 0;
                 const customML = app.custom_model_score ?? 0;
+                const gradioScore = app.gradio_match_score;
                 const cgpa = app.cgpa ?? "N/A";
 
                 const rowBg = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
@@ -439,7 +468,7 @@ function HRJobApplications() {
                 return (
                   <div
                     key={app.id ?? idx}
-                    className={`${rowBg} grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 md:p-5 border-b border-gray-100 hover:bg-gray-50 transition`}
+                    className={`${rowBg} grid grid-cols-1 md:grid-cols-12 gap-4 items-center`}
                   >
                     {/* Rank Number */}
                     <div className="md:col-span-1 text-center">
@@ -503,12 +532,35 @@ function HRJobApplications() {
                         {customML ? `${customML.toFixed(1)}%` : "—"}
                       </div>
                     </div>
+                  {/* ✅ Gradio Score buttojn click functionality */}
+                  <div className="md:col-span-1 text-center">
+                  <button
+                    onClick={() => {
+                      setSelectedAnalysis(app.gradio_analysis || {
+                        matching_analysis: "Analysis unavailable",
+                        description: "No description",
+                        score: 0,
+                        recommendation: "Other analysis scores are available. Match score will be retried automatically."
+                      });
+                      setIsModalOpen(true);
+                    }}
+                    className={`font-medium ${
+                      gradioScore ? 'text-purple-600' : 'text-gray-400'
+                    } relative hover:underline hover:text-purple-800 hover:scale-105 transition-all duration-200 cursor-pointer`}
+                    title="Click to view detailed analysis"
+                  >
+                    {gradioScore ? `${gradioScore.toFixed(1)}%` : 'Processing...'}
+                  </button>
+                </div>
+
+
 
                     {/* CGPA */}
-                    <div className="md:col-span-1 text-center text-gray-700 flex justify-center items-center gap-1">
-                      <AcademicCapIcon className="h-5 w-5 text-purple-500" />
-                      <span>{cgpa}</span>
-                    </div>
+                    <div className="md:col-span-1 flex justify-center items-center text-center text-gray-700 gap-1 h-full">
+                    <AcademicCapIcon className="h-5 w-5 text-purple-500" />
+                    <span>{cgpa}</span>
+                  </div>
+
 
                     {/* Actions */}
                     <div className="md:col-span-2 flex flex-col sm:flex-row justify-center gap-2">
@@ -566,6 +618,24 @@ function HRJobApplications() {
                 </p>
               )}
             </div>
+            {/* ✅ Gradio Analysis Modal */}
+            {isModalOpen && selectedAnalysis && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 font-bold"
+                  >
+                    ✕
+                  </button>
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Model  Detailed Analysis</h3>
+                  <p><span className="font-semibold">Matching Analysis:</span> {selectedAnalysis.matching_analysis}</p>
+                  <p className="mt-2"><span className="font-semibold">Description:</span> {selectedAnalysis.description}</p>
+                  <p className="mt-2"><span className="font-semibold">Score:</span> {selectedAnalysis.score}</p>
+                  <p className="mt-2"><span className="font-semibold">Recommendation:</span> {selectedAnalysis.recommendation}</p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
