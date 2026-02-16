@@ -49,7 +49,7 @@ const ScheduleInterview = () => {
         hrEmail: hrEmail.trim()
       };
 
-      const result = await scheduleInterviewWithNotification(data);
+      // const result = await scheduleInterviewWithNotification(data);
       
       setSuccess(true);
       setTitle("");
