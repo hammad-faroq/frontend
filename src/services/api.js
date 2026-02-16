@@ -6,7 +6,8 @@ const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
 const BASE_CV_URL = "https://backendfyp-production-00a3.up.railway.app/cv_manager"
 const BASE_INTERVIEW_URL = "https://backendfyp-production-00a3.up.railway.app/api/interview";
 
-/* ---------------- Huggug face deployed mdoels ---------------- */
+
+/* ---------------- Huggug face deployed mdoels ------------------ */
 export const triggerResumeAnalysis = async (jobApplicationId) => {
   const response = await api.post("/resumedata/analyze/", {
     job_application_id: jobApplicationId,
