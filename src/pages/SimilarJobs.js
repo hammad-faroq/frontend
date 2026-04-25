@@ -96,7 +96,7 @@ function SimilarJobs() {
         toast.error(`You have already applied to "${jobTitle}"`);
         setAppliedJobs(prev => new Set([...prev, jobId]));
       } else {
-        atoast.error(`Failed to apply: ${result.message || "Unknown error"}`);
+        toast.error(`Failed to apply: ${result.message || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Apply error:", error);
