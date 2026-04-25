@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getInterviewQuestions, submitInterviewAnswer } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 const InterviewPage = () => {
   const { interviewId } = useParams();
@@ -21,7 +22,7 @@ const InterviewPage = () => {
   const handleAnswerSubmit = async (questionId, answer) => {
     try {
       await submitInterviewAnswer(interviewId, questionId, answer);
-      alert("Answer submitted!");
+      toast.success("Answer submitted!");
     } catch (err) {
       console.error("Failed to submit answer:", err);
     }

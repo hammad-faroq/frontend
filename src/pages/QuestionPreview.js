@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function QuestionPreview() {
   const { questionId } = useParams();
@@ -270,7 +271,7 @@ function QuestionPreview() {
               onClick={() => {
                 // Copy question ID or other functionality
                 navigator.clipboard.writeText(question.id);
-                alert("Question ID copied to clipboard!");
+                toast.success("Question ID copied to clipboard!");
               }}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >

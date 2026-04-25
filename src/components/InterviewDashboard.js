@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { interviewApi } from '../services/interviewApi';
 import { useNavigate } from 'react-router-dom';
+import API from "../services/api";
+import toast from "react-hot-toast";
 
 function InterviewDashboard() {
   const [interviews, setInterviews] = useState([]);
@@ -10,6 +12,7 @@ function InterviewDashboard() {
   const [debugInfo, setDebugInfo] = useState('');
   const [role, setRole] = useState(localStorage.getItem('role') || 'job_seeker');
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     fetchInterviews();
@@ -114,7 +117,7 @@ function InterviewDashboard() {
         navigate(`/interview/${interviewId}/live`);
       } catch (err) {
         const errorMsg = err.response?.data?.detail || err.response?.data?.error || err.message;
-        alert(`Failed to start interview: ${errorMsg}`);
+        toast.error(`Failed to start interview: ${errorMsg}`);
         setDebugInfo(`Start interview failed: ${errorMsg}`);
       }
     }
@@ -134,10 +137,10 @@ function InterviewDashboard() {
         setDebugInfo('Cancelling interview...');
         await interviewApi.cancelInterview(interviewId);
         fetchInterviews();
-        alert('Interview cancelled successfully.');
+        toast.success('Interview cancelled successfully.');
       } catch (err) {
         const errorMsg = err.response?.data?.detail || err.response?.data?.error || err.message;
-        alert(`Failed to cancel interview: ${errorMsg}`);
+        toast.error(`Failed to cancel interview: ${errorMsg}`);
       }
     }
   };
@@ -162,7 +165,7 @@ function InterviewDashboard() {
         ]);
         
         if (!candidates.length || !jobs.length) {
-          alert('Need at least one candidate and job to create test interview');
+          toast.success('Need at least one candidate and job to create test interview');
           return;
         }
         
@@ -177,15 +180,15 @@ function InterviewDashboard() {
         };
         
         const result = await interviewApi.scheduleInterview(testData);
-        alert('Test interview created successfully!');
+        toast.success('Test interview created successfully!');
         fetchInterviews();
       } catch (err) {
         const errorMsg = err.response?.data?.detail || err.response?.data?.error || err.message;
-        alert(`Failed to create test interview: ${errorMsg}`);
+        toast.error(`Failed to create test interview: ${errorMsg}`);
         setDebugInfo(`Create test failed: ${errorMsg}`);
       }
     } else {
-      alert('Only HR users can create test interviews.');
+      toast.error('Only HR users can create test interviews.');
     }
   };
 
@@ -196,11 +199,11 @@ function InterviewDashboard() {
       
       if (!token) {
         setDebugInfo('No token found');
-        alert('Please login first');
+        toast.error('Please login first');
         return;
       }
       
-      const response = await fetch('https://backendfyp-production-00a3.up.railway.app/interview/interviews/', {
+      const response = await fetch(`${API.INTERVIEW}/interviews/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -209,10 +212,10 @@ function InterviewDashboard() {
       
       const data = await response.json();
       setDebugInfo(`API Test - Status: ${response.status}, Data: ${JSON.stringify(data).substring(0, 100)}...`);
-      alert(`API Test Result:\nStatus: ${response.status}\nData length: ${Array.isArray(data) ? data.length : 'N/A'}`);
+      toast.success(`API Test Result:\nStatus: ${response.status}\nData length: ${Array.isArray(data) ? data.length : 'N/A'}`);
     } catch (err) {
       setDebugInfo(`API Test failed: ${err.message}`);
-      alert(`API Test failed: ${err.message}`);
+      toast.error(`API Test failed: ${err.message}`);
     }
   };
 
@@ -274,7 +277,7 @@ function InterviewDashboard() {
                   role,
                   tokenExists: !!(localStorage.getItem('access_token') || localStorage.getItem('token')),
                   user_id: localStorage.getItem('user_id'),
-                  backendUrl: 'https://backendfyp-production-00a3.up.railway.app/api/interview/interviews/',
+                  backendUrl: `${API.INTERVIEW}/interviews/`,
                   debugInfo
                 }, null, 2)}
               </pre>

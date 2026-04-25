@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import toast from "react-hot-toast";
 import {
   getCandidateInterviewQuestions,
   getCandidateInterviewDetail,
@@ -317,13 +317,13 @@ function CandidateInterviewQuestions() {
       const result = await submitAllAnswers(id, payload);
       console.log("Submit all result:", result);
 
-      alert("Interview submitted successfully! You will be redirected to your interview dashboard.");
+      toast.success("Interview submitted successfully! You will be redirected to your interview dashboard.");
       
       navigate(`/jobseeker/interview/${id}/result`);
 
     } catch (err) {
       console.error("Submit all failed:", err);
-      alert(err?.response?.data?.error || "Failed to submit interview. Please try again.");
+      toast.error(err?.response?.data?.error || "Failed to submit interview. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -391,7 +391,7 @@ function CandidateInterviewQuestions() {
   if (loading) {
     return (
       <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
+        {/* <Sidebar /> */}
         <div className="flex-1 p-6 flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
           <p className="text-gray-600">Loading interview questions...</p>
@@ -404,7 +404,7 @@ function CandidateInterviewQuestions() {
   if (apiError) {
     return (
       <div className="min-h-screen flex bg-gray-50">
-        <Sidebar />
+        {/* <Sidebar /> */}
         <div className="flex-1 p-6 max-w-4xl mx-auto">
           <button
             onClick={handleBackToInterview}
@@ -468,7 +468,7 @@ function CandidateInterviewQuestions() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      <Sidebar />
+      {/* <Sidebar /> */}
 
       <div className="flex-1 p-6 max-w-5xl mx-auto">
         {/* Header */}

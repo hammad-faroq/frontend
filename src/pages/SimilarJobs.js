@@ -1,6 +1,7 @@
 // src/pages/SimilarJobs.js
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { 
   getSimilarJobs, 
   getResumeAnalysis, 
@@ -65,14 +66,14 @@ function SimilarJobs() {
   // Handle job application
   const handleApply = async (jobId, jobTitle) => {
     if (appliedJobs.has(jobId)) {
-      alert(`You have already applied for "${jobTitle}"`);
+      toast.error(`You have already applied for "${jobTitle}"`);
       return;
     }
 
     const resumeFile = prompt("Please upload your resume for this application. For now, please enter resume text or URL:");
     
     if (!resumeFile) {
-      alert("Resume is required to apply for this job.");
+      toast.error("Resume is required to apply for this job.");
       return;
     }
 
@@ -88,18 +89,18 @@ function SimilarJobs() {
       const result = await applyToJob(jobId, mockFile);
       
       if (result.status === "success") {
-        alert(`Successfully applied to "${jobTitle}"!`);
+        toast.success(`Successfully applied to "${jobTitle}"!`);
         // Update applied jobs set
         setAppliedJobs(prev => new Set([...prev, jobId]));
       } else if (result.status === "already_applied") {
-        alert(`You have already applied to "${jobTitle}"`);
+        toast.error(`You have already applied to "${jobTitle}"`);
         setAppliedJobs(prev => new Set([...prev, jobId]));
       } else {
-        alert(`Failed to apply: ${result.message || "Unknown error"}`);
+        atoast.error(`Failed to apply: ${result.message || "Unknown error"}`);
       }
     } catch (error) {
       console.error("Apply error:", error);
-      alert("Failed to apply. Please try again.");
+      toast.error("Failed to apply. Please try again.");
     } finally {
       setApplying(prev => ({ ...prev, [jobId]: false }));
     }

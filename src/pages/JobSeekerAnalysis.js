@@ -37,7 +37,7 @@ function JobSeekerAnalysis() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
@@ -52,7 +52,7 @@ function JobSeekerAnalysis() {
     return (
       <div className="flex min-h-screen bg-gray-50">
         {/* Sidebar */}
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         
         {/* Main Content */}
         <div className="flex-1 p-8 overflow-y-auto">
@@ -83,8 +83,6 @@ function JobSeekerAnalysis() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
       
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
@@ -164,7 +162,7 @@ function JobSeekerAnalysis() {
                       role.match_score >= 60 ? "bg-yellow-100 text-yellow-800" :
                       "bg-red-100 text-red-800"
                     }`}>
-                      {role.match_score}% Match
+                      {role.match_score} Match
                     </span>
                   </div>
                   <p className="text-gray-600 mb-3">{role.reason}</p>

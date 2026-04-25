@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function HRInterviewsList({ 
   interviews = [], 
@@ -134,17 +135,17 @@ function HRInterviewsList({
   const handleCancel = (interviewId) => {
     if (window.confirm("Are you sure you want to cancel this interview?")) {
       onCancelInterview(interviewId);
-      alert("Interview marked as cancelled (frontend only). Implement API for persistence.");
+      toast.error("Interview marked as cancelled (frontend only). Implement API for persistence.");
     }
   };
 
   // Handle mark as no show (frontend only)
-  const handleMarkNoShow = (interviewId) => {
-    if (window.confirm("Mark this interview as 'No Show'?")) {
-      onMarkNoShow(interviewId);
-      alert("Interview marked as no-show (frontend only). Implement API for persistence.");
-    }
-  };
+ const handleMarkNoShow = (interviewId) => {
+  if (window.confirm("Mark this interview as 'No Show'?")) {
+    onMarkNoShow(interviewId);
+    toast.error("Interview marked as no-show (frontend only). Implement API for persistence.");
+  }
+};
 
   // Handle monitor interview
   const handleMonitorInterview = (interviewId) => {

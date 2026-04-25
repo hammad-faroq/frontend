@@ -38,7 +38,7 @@ function LearningPathPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
+      {/* <Sidebar /> */}
       <main className="flex-1 p-8">
         <h1 className="text-3xl font-bold mb-6">📘 Your Learning Path</h1>
         <h2 className="text-2xl font-semibold mb-4">Target Role: <span className="text-indigo-600">{path.target_role}</span></h2>

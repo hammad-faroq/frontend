@@ -1,8 +1,9 @@
 // src/pages/JobSeekerInterviewDetail.js
 import  { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import toast from "react-hot-toast";
 import { logoutUser } from "../services/api";
+import API from "../services/api";
 // Import the API functions
 import { 
   startCandidateInterview, 
@@ -191,11 +192,11 @@ function JobSeekerInterviewDetail() {
     }
 
     const endpoints = [
-      `https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interviews/${id}/`,
-      `https://backendfyp-production-00a3.up.railway.app/api/interviews/${id}/`,
-      `https://backendfyp-production-00a3.up.railway.app/api/interviews/candidate/${id}/`,
-      `https://backendfyp-production-00a3.up.railway.app/api/candidate/interviews/${id}/`,
-      `https://backendfyp-production-00a3.up.railway.app/api/interview/${id}/`,
+      `${API.BASE_API_URL}/interview/candidate/interviews/${id}/`,
+      `${API.BASE_API_URL}/interviews/${id}/`,
+      `${API.BASE_API_URL}/interviews/candidate/${id}/`,
+      `${API.BASE_API_URL}/candidate/interviews/${id}/`,
+      `${API.BASE_API_URL}/interview/${id}/`,
     ];
 
     let response = null;
@@ -252,10 +253,10 @@ function JobSeekerInterviewDetail() {
       const token = localStorage.getItem("token");
       
       const feedbackEndpoints = [
-        `https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interviews/${interviewId}/feedback/`,
-        `https://backendfyp-production-00a3.up.railway.app/api/interviews/${interviewId}/feedback/`,
-        `https://backendfyp-production-00a3.up.railway.app/api/candidate/interviews/${interviewId}/feedback/`,
-        `https://backendfyp-production-00a3.up.railway.app/api/interview/feedback/${interviewId}/`,
+        `${API.BASE_API_URL}/interview/candidate/interviews/${interviewId}/feedback/`,
+        `${API.BASE_API_URL}/interviews/${interviewId}/feedback/`,
+        `${API.BASE_API_URL}/candidate/interviews/${interviewId}/feedback/`,
+        `${API.BASE_API_URL}/interview/feedback/${interviewId}/`,
       ];
 
       for (const endpoint of feedbackEndpoints) {
@@ -354,7 +355,7 @@ function JobSeekerInterviewDetail() {
       const token = localStorage.getItem("token");
       console.log("Using token for fallback:", token ? "Yes (length: " + token.length + ")" : "No");
       
-      const response = await fetch(`https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/interview/${id}/start/`, {
+      const response = await fetch(`${API.BASE_API_URL}/interview/candidate/interview/${id}/start/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -380,11 +381,11 @@ function JobSeekerInterviewDetail() {
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Could not parse error response' }));
         console.error("Fallback error response:", errorData);
-        alert(`Failed to start interview: ${errorData.error || 'Please try again'}`);
+        toast.error(`Failed to start interview: ${errorData.error || 'Please try again'}`);
       }
     } catch (fetchError) {
       console.error("Fallback fetch error:", fetchError);
-      alert("Failed to start interview. Please check your connection.");
+      toast.error("Failed to start interview. Please check your connection.");
     }
   } finally {
     setStartingInterview(false);
@@ -393,7 +394,7 @@ function JobSeekerInterviewDetail() {
 
   const handleJoinMeeting = () => {
     if (!interview?.meeting_link) {
-      alert("Meeting link is not available. Please contact the interviewer.");
+      toast.error("Meeting link is not available. Please contact the interviewer.");
       return;
     }
 
@@ -409,13 +410,13 @@ function JobSeekerInterviewDetail() {
 
   const handleReschedule = () => {
     if (window.confirm("Do you want to request a reschedule for this interview?")) {
-      alert("Reschedule request sent to the interviewer. You will be notified once they respond.");
+      toast.success("Reschedule request sent to the interviewer. You will be notified once they respond.");
     }
   };
 
   const handleCancel = () => {
     if (window.confirm("Are you sure you want to cancel this interview? This action cannot be undone.")) {
-      alert("Cancellation request sent. The interviewer will be notified.");
+      toast.success("Cancellation request sent. The interviewer will be notified.");
     }
   };
 
@@ -461,7 +462,7 @@ function JobSeekerInterviewDetail() {
 
   const downloadICS = () => {
     if (!interview?.scheduled_date) {
-      alert("No interview date available to create calendar event.");
+      toast.error("No interview date available to create calendar event.");
       return;
     }
 
@@ -493,16 +494,16 @@ function JobSeekerInterviewDetail() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      alert("Calendar event downloaded. Import it to your calendar.");
+      toast.success("Calendar event downloaded. Import it to your calendar.");
     } catch (err) {
       console.error("Error creating ICS file:", err);
-      alert("Failed to create calendar event.");
+      toast.error("Failed to create calendar event.");
     }
   };
 
   // Check browser console for API debugging
   const checkConsoleForDetails = () => {
-    alert("Please check your browser's Developer Tools (F12) → Console tab for detailed API call information and errors.");
+    toast.error("Please check your browser's Developer Tools (F12) → Console tab for detailed API call information and errors.");
   };
 
   // Navigate to interview questions page directly (for testing)
@@ -513,7 +514,7 @@ function JobSeekerInterviewDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-6xl mx-auto">
             <button
@@ -538,7 +539,7 @@ function JobSeekerInterviewDetail() {
   if (error || !interview) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
             <button
@@ -619,7 +620,7 @@ function JobSeekerInterviewDetail() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
@@ -1067,7 +1068,7 @@ function JobSeekerInterviewDetail() {
                       <button
                         onClick={() => {
                           navigator.clipboard.writeText(interview.meeting_link);
-                          alert('Meeting link copied to clipboard!');
+                          toast.success('Meeting link copied to clipboard!');
                         }}
                         className="w-full mt-2 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 text-sm"
                       >
@@ -1111,7 +1112,7 @@ function JobSeekerInterviewDetail() {
                     Having technical issues or need to reschedule?
                   </p>
                   <button
-                    onClick={() => alert(`Contact ${interview.contact_email || 'support'} for assistance`)}
+                    onClick={() => toast.success(`Contact ${interview.contact_email || 'support'} for assistance`)}
                     className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                   >
                     Contact Support
@@ -1179,7 +1180,7 @@ function JobSeekerInterviewDetail() {
                         onClick={() => {
                           const checkboxes = document.querySelectorAll('input[type="checkbox"]');
                           checkboxes.forEach(cb => cb.checked = true);
-                          alert("All checklist items marked as complete!");
+                          toast.success("All checklist items marked as complete!");
                         }}
                         className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
                       >

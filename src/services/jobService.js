@@ -1,5 +1,9 @@
 // src/services/jobService.js
-const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+
+import API from "../services/api";
+
+// ---------------- Base URL ----------------
+const API_BASE_URL = API.JOBS;
 
 
 class JobService {

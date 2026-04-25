@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API from "../services/api";
 
 const JobPostingForm = ({ jobToEdit = null, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -13,7 +14,7 @@ const JobPostingForm = ({ jobToEdit = null, onSuccess, onCancel }) => {
   const [notification, setNotification] = useState(null);
 
   // API Base URL
-  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+  const API_BASE_URL = API.JOBS;
 
   // Get authentication headers
   const getAuthHeaders = () => {

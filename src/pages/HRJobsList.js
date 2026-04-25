@@ -1,19 +1,54 @@
 import React from "react";
 import { deleteJob } from "../services/api";
+import toast from "react-hot-toast";
 
-function HRJobsList({ jobs = [], onEditJob, onViewJob, onScheduleInterview, onDeleteJob }) {
+function HRJobsList({ jobs = [], onEditJob, onViewJob, onScheduleInterview, onDeleteJob,onCreateJob}) {
   
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
-      try {
-        await deleteJob(jobId);
-        onDeleteJob();
-      } catch (err) {
-        console.error(err);
-        alert("Failed to delete job.");
-      }
-    }
-  };
+  const confirmed = await new Promise((resolve) => {
+    toast(
+      (t) => (
+        <div>
+          <p className="mb-2">Are you sure you want to delete this job?</p>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                resolve(true);
+              }}
+              className="bg-red-500 text-white px-2 py-1 rounded"
+            >
+              Yes
+            </button>
+
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                resolve(false);
+              }}
+              className="bg-gray-300 px-2 py-1 rounded"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity }
+    );
+  });
+
+  if (!confirmed) return;
+
+  try {
+    await deleteJob(jobId);
+    toast.success("Job deleted successfully");
+    onDeleteJob(jobId); // optional improvement
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to delete job.");
+  }
+};
 
   const safeJobs = Array.isArray(jobs) ? jobs : [];
 
@@ -29,12 +64,13 @@ function HRJobsList({ jobs = [], onEditJob, onViewJob, onScheduleInterview, onDe
       {safeJobs.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="mb-3">You haven't posted any jobs yet</p>
-          <button
-            onClick={() => onEditJob()}
-            className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition"
-          >
-            Create your first job
-          </button>
+          <button onClick={onCreateJob} className="hr-btn hr-btn--sm hr-btn--primary">
+              {/* <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg> */}
+              Create First Job
+            </button>
         </div>
       ) : (
         <div className="overflow-x-auto">

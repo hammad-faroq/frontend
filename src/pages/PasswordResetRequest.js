@@ -1,7 +1,66 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { requestPasswordReset } from "../services/api";
 
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  .prr-wrap * { box-sizing: border-box; }
+  .prr-wrap { font-family: 'DM Sans', sans-serif; min-height: 100vh; background: #f5f6ff; color: #1e1b3a; display: flex; align-items: center; justify-content: center; padding: 40px 16px; position: relative; overflow: hidden; }
+
+  .prr-blob { position: fixed; border-radius: 50%; filter: blur(100px); opacity: .15; pointer-events: none; z-index: 0; }
+  .prr-blob--1 { width: 500px; height: 500px; background: radial-gradient(circle,#6366f1,transparent); top: -160px; left: -100px; animation: prr-drift 14s ease-in-out infinite alternate; }
+  .prr-blob--2 { width: 380px; height: 380px; background: radial-gradient(circle,#10b981,transparent); bottom: -100px; right: -60px; animation: prr-drift 18s ease-in-out infinite alternate-reverse; }
+  @keyframes prr-drift { 0%{transform:translate(0,0)} 100%{transform:translate(20px,14px)} }
+  .prr-grid-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; background-image: linear-gradient(rgba(99,102,241,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.05) 1px,transparent 1px); background-size: 40px 40px; }
+
+  .prr-card { position: relative; z-index: 1; background: #fff; border: 1px solid #e8eaf6; border-radius: 20px; padding: 40px 36px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(99,102,241,.1); animation: prr-in .4s ease both; }
+  @keyframes prr-in { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .prr-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 28px; }
+  .prr-logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg,#4f46e5,#7c3aed); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .prr-logo-text { font-family: 'Syne',sans-serif; font-size: 20px; font-weight: 800; color: #1e1b3a; }
+
+  .prr-title { font-family: 'Syne',sans-serif; font-size: 26px; font-weight: 800; color: #1e1b3a; text-align: center; margin: 0 0 6px; letter-spacing: -.3px; }
+  .prr-title span { background: linear-gradient(90deg,#4f46e5,#7c3aed); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .prr-sub { text-align: center; font-size: 14px; color: #9ca3af; margin: 0 0 28px; line-height: 1.5; }
+
+  .prr-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .prr-field label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #9ca3af; }
+  .prr-input { width: 100%; padding: 12px 14px; border: 1px solid #e0e7ff; border-radius: 10px; font-family: 'DM Sans',sans-serif; font-size: 14px; color: #1e1b3a; background: #f5f6ff; outline: none; transition: all .2s; }
+  .prr-input:focus { border-color: #a5b4fc; background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
+  .prr-input:disabled { opacity: .6; cursor: not-allowed; }
+  .prr-input--error { border-color: #fca5a5; background: #fff5f5; }
+  .prr-error { color: #ef4444; font-size: 12px; margin-top: 2px; }
+
+  .prr-submit { width: 100%; padding: 13px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans',sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: all .2s; box-shadow: 0 4px 16px rgba(79,70,229,.25); margin-top: 8px; }
+  .prr-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,.35); }
+  .prr-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  .prr-msg { padding: 12px 14px; border-radius: 10px; margin-top: 16px; font-size: 13px; font-weight: 600; text-align: center; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+
+  .prr-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .prr-divider-line { flex: 1; height: 1px; background: #e0e7ff; }
+
+  .prr-footer { text-align: center; font-size: 13.5px; color: #9ca3af; margin-top: 20px; }
+  .prr-link { background: none; border: none; color: #6366f1; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans',sans-serif; padding: 0; }
+  .prr-link:hover { color: #4f46e5; text-decoration: underline; }
+  .prr-link:disabled { opacity: .6; cursor: not-allowed; }
+
+  /* Success state */
+  .prr-success-icon { font-size: 48px; text-align: center; margin-bottom: 16px; }
+  .prr-success-title { font-family: 'Syne',sans-serif; font-size: 24px; font-weight: 800; color: #1e1b3a; text-align: center; margin: 0 0 8px; }
+  .prr-success-title span { background: linear-gradient(90deg,#10b981,#059669); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .prr-success-sub { font-size: 14px; color: #9ca3af; text-align: center; margin: 0 0 24px; line-height: 1.6; }
+  .prr-instructions { background: #f5f6ff; border: 1px solid #e0e7ff; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; }
+  .prr-instructions h4 { font-family: 'Syne',sans-serif; font-size: 13px; font-weight: 700; color: #4f46e5; margin: 0 0 10px; text-transform: uppercase; letter-spacing: .5px; }
+  .prr-instructions ol { margin: 0; padding-left: 18px; font-size: 13px; color: #6b7280; line-height: 1.8; }
+  .prr-btn-row { display: flex; gap: 10px; }
+  .prr-btn-primary { flex: 1; padding: 12px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; border: none; border-radius: 12px; font-family: 'DM Sans',sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; box-shadow: 0 4px 16px rgba(79,70,229,.25); }
+  .prr-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(79,70,229,.35); }
+  .prr-btn-secondary { flex: 1; padding: 12px; background: #f5f6ff; color: #6366f1; border: 1px solid #e0e7ff; border-radius: 12px; font-family: 'DM Sans',sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
+  .prr-btn-secondary:hover { background: #e0e7ff; }
+`;
 
 function PasswordResetRequest() {
   const [email, setEmail] = useState("");
@@ -11,24 +70,12 @@ function PasswordResetRequest() {
   const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validation
-    if (!email.trim()) {
-      setError("Email is required");
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
+    if (!email.trim()) { setError("Email is required"); return; }
+    if (!validateEmail(email)) { setError("Please enter a valid email address"); return; }
 
     setIsLoading(true);
     setError("");
@@ -36,11 +83,10 @@ function PasswordResetRequest() {
 
     try {
       const response = await requestPasswordReset(email);
-
       if (response.ok) {
-        setMessage("✅ Password reset email sent successfully!");
+        setMessage("Password reset email sent successfully!");
         setEmailSent(true);
-        setEmail(""); // Clear the form
+        setEmail("");
       } else {
         if (response.status === 404) {
           setError("No account found with this email address");
@@ -58,9 +104,9 @@ function PasswordResetRequest() {
 
   const handleInputChange = (e) => {
     setEmail(e.target.value);
-    setError(""); // Clear error when user types
-    setMessage(""); // Clear previous message
-    setEmailSent(false); // Reset email sent status
+    setError("");
+    setMessage("");
+    setEmailSent(false);
   };
 
   const handleTryAgain = () => {
@@ -72,37 +118,40 @@ function PasswordResetRequest() {
 
   if (emailSent) {
     return (
-      <div style={styles.container}>
-        <div style={styles.successContainer}>
-          <div style={styles.successIcon}>✅</div>
-          <h2 style={styles.successTitle}>Email Sent Successfully!</h2>
-          <p style={styles.successMessage}>
-            We've sent a password reset link to your email address. 
-            Please check your inbox and follow the instructions to reset your password.
+      <div className="prr-wrap">
+        <style>{styles}</style>
+        <div className="prr-blob prr-blob--1"/>
+        <div className="prr-blob prr-blob--2"/>
+        <div className="prr-grid-bg"/>
+
+        <div className="prr-card">
+          <div className="prr-logo">
+            <div className="prr-logo-icon">🚀</div>
+            <span className="prr-logo-text">TalentMatch AI</span>
+          </div>
+
+          <div className="prr-success-icon">✅</div>
+          <h2 className="prr-success-title">Email <span>Sent!</span></h2>
+          <p className="prr-success-sub">
+            We've sent a password reset link to your email. Check your inbox and follow the instructions.
           </p>
-          
-          <div style={styles.instructionsBox}>
-            <h4>What to do next:</h4>
-            <ol style={styles.instructionsList}>
-              <li>Check your email inbox (and spam folder)</li>
+
+          <div className="prr-instructions">
+            <h4>What to do next</h4>
+            <ol>
+              <li>Check your inbox (and spam folder)</li>
               <li>Look for an email from TalentMatch AI</li>
-              <li>Click the password reset link in the email</li>
-              <li>Follow the instructions to create a new password</li>
+              <li>Click the password reset link</li>
+              <li>Create your new password</li>
             </ol>
           </div>
 
-          <div style={styles.actionButtons}>
-            <button 
-              onClick={() => navigate("/login")}
-              style={styles.primaryButton}
-            >
+          <div className="prr-btn-row">
+            <button className="prr-btn-primary" onClick={() => navigate("/login")}>
               Back to Login
             </button>
-            <button 
-              onClick={handleTryAgain}
-              style={styles.secondaryButton}
-            >
-              Send Another Email
+            <button className="prr-btn-secondary" onClick={handleTryAgain}>
+              Send Again
             </button>
           </div>
         </div>
@@ -111,283 +160,64 @@ function PasswordResetRequest() {
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.formContainer}>
-        {/* Header */}
-        <div style={styles.header}>
-          <h2 style={styles.title}>Reset Your Password</h2>
-          <p style={styles.subtitle}>
-            Enter your email address and we'll send you a link to reset your password
-          </p>
+    <div className="prr-wrap">
+      <style>{styles}</style>
+      <div className="prr-blob prr-blob--1"/>
+      <div className="prr-blob prr-blob--2"/>
+      <div className="prr-grid-bg"/>
+
+      <div className="prr-card">
+        <div className="prr-logo">
+          <div className="prr-logo-icon">🚀</div>
+          <span className="prr-logo-text">TalentMatch AI</span>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.fieldGroup}>
-            <label style={styles.label}>Email Address</label>
+        <h1 className="prr-title">Reset <span>Password</span></h1>
+        <p className="prr-sub">Enter your email and we'll send you a reset link</p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="prr-field">
+            <label>Email Address *</label>
             <input
+              className={`prr-input${error ? " prr-input--error" : ""}`}
               type="email"
-              placeholder="Enter your registered email"
+              placeholder="you@example.com"
               value={email}
               onChange={handleInputChange}
-              style={{
-                ...styles.input,
-                ...(error ? styles.inputError : {})
-              }}
               disabled={isLoading}
               autoFocus
             />
-            {error && (
-              <span style={styles.errorText}>{error}</span>
-            )}
+            {error && <span className="prr-error">{error}</span>}
           </div>
 
-          <button 
-            type="submit" 
-            style={{
-              ...styles.submitButton,
-              ...(isLoading ? styles.submitButtonDisabled : {})
-            }}
+          <button
+            type="submit"
+            className="prr-submit"
             disabled={isLoading || !email.trim()}
           >
-            {isLoading ? "Sending..." : "Send Reset Email"}
+            {isLoading ? "Sending..." : "Send Reset Email →"}
           </button>
+
+          {message && <div className="prr-msg">✅ {message}</div>}
         </form>
 
-        {/* Message Display */}
-        {message && (
-          <div style={styles.messageBox}>
-            {message}
-          </div>
-        )}
-
-        {/* Navigation Links */}
-        <div style={styles.navigationSection}>
-          <div style={styles.navLinks}>
-            <button 
-              onClick={() => navigate("/login")}
-              style={styles.navButton}
-              disabled={isLoading}
-            >
-              ← Back to Login
-            </button>
-            <button 
-              onClick={() => navigate("/register")}
-              style={styles.navButton}
-              disabled={isLoading}
-            >
-              Create New Account →
-            </button>
-          </div>
+        <div className="prr-divider">
+          <div className="prr-divider-line"/>
         </div>
 
-        {/* Help Section */}
-        <div style={styles.helpSection}>
-          <h4 style={styles.helpTitle}>Need Help?</h4>
-          <div style={styles.helpContent}>
-            <p><strong>Don't have an account?</strong> <a href="/register" style={styles.link}>Sign up here</a></p>
-            <p><strong>Remember your password?</strong> <a href="/login" style={styles.link}>Sign in instead</a></p>
-            <p><strong>Still having trouble?</strong> Contact our support team</p>
-          </div>
-        </div>
+        <p className="prr-footer">
+          Remember your password?{" "}
+          <button className="prr-link" onClick={() => navigate("/login")} disabled={isLoading}>
+            Sign In
+          </button>
+          {" · "}
+          <button className="prr-link" onClick={() => navigate("/register")} disabled={isLoading}>
+            Create Account
+          </button>
+        </p>
       </div>
     </div>
   );
 }
-
-// Styles
-const styles = {
-  container: {
-    minHeight: "100vh",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#f5f5f5",
-    padding: "20px"
-  },
-  formContainer: {
-    backgroundColor: "white",
-    padding: "40px",
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    width: "100%",
-    maxWidth: "500px"
-  },
-  successContainer: {
-    backgroundColor: "white",
-    padding: "40px",
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    width: "100%",
-    maxWidth: "600px",
-    textAlign: "center"
-  },
-  header: {
-    textAlign: "center",
-    marginBottom: "30px"
-  },
-  title: {
-    color: "#333",
-    fontSize: "28px",
-    marginBottom: "10px"
-  },
-  subtitle: {
-    color: "#666",
-    fontSize: "16px",
-    lineHeight: "1.4"
-  },
-  form: {
-    marginBottom: "30px"
-  },
-  fieldGroup: {
-    marginBottom: "20px"
-  },
-  label: {
-    display: "block",
-    marginBottom: "5px",
-    color: "#555",
-    fontWeight: "500"
-  },
-  input: {
-    width: "100%",
-    padding: "12px",
-    border: "1px solid #ddd",
-    borderRadius: "4px",
-    fontSize: "16px",
-    boxSizing: "border-box"
-  },
-  inputError: {
-    borderColor: "#e74c3c",
-    boxShadow: "0 0 0 2px rgba(231, 76, 60, 0.2)"
-  },
-  errorText: {
-    color: "#e74c3c",
-    fontSize: "14px",
-    marginTop: "5px",
-    display: "block"
-  },
-  submitButton: {
-    width: "100%",
-    backgroundColor: "#e67e22",
-    color: "white",
-    padding: "14px",
-    border: "none",
-    borderRadius: "4px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    cursor: "pointer",
-    transition: "background-color 0.3s"
-  },
-  submitButtonDisabled: {
-    backgroundColor: "#bdc3c7",
-    cursor: "not-allowed"
-  },
-  messageBox: {
-    padding: "15px",
-    borderRadius: "6px",
-    marginBottom: "20px",
-    backgroundColor: "#d4edda",
-    color: "#155724",
-    border: "1px solid #c3e6cb",
-    textAlign: "center",
-    fontWeight: "500"
-  },
-  navigationSection: {
-    borderTop: "1px solid #eee",
-    paddingTop: "20px",
-    marginTop: "20px"
-  },
-  navLinks: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "10px"
-  },
-  navButton: {
-    background: "none",
-    border: "none",
-    color: "#3498db",
-    cursor: "pointer",
-    fontSize: "14px",
-    textDecoration: "underline",
-    padding: "5px"
-  },
-  helpSection: {
-    marginTop: "30px",
-    padding: "20px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "6px",
-    border: "1px solid #dee2e6"
-  },
-  helpTitle: {
-    color: "#495057",
-    marginBottom: "15px",
-    fontSize: "16px",
-    textAlign: "center"
-  },
-  helpContent: {
-    fontSize: "14px",
-    lineHeight: "1.6",
-    color: "#6c757d"
-  },
-  link: {
-    color: "#3498db",
-    textDecoration: "none"
-  },
-  successIcon: {
-    fontSize: "64px",
-    marginBottom: "20px"
-  },
-  successTitle: {
-    color: "#27ae60",
-    fontSize: "28px",
-    fontWeight: "bold",
-    marginBottom: "15px"
-  },
-  successMessage: {
-    color: "#555",
-    fontSize: "18px",
-    lineHeight: "1.6",
-    marginBottom: "30px"
-  },
-  instructionsBox: {
-    backgroundColor: "#e8f5e8",
-    padding: "20px",
-    borderRadius: "6px",
-    marginBottom: "30px",
-    textAlign: "left",
-    border: "1px solid #c3e6cb"
-  },
-  instructionsList: {
-    margin: "10px 0",
-    paddingLeft: "20px",
-    color: "#2d5a2d"
-  },
-  actionButtons: {
-    display: "flex",
-    gap: "15px",
-    justifyContent: "center",
-    flexWrap: "wrap"
-  },
-  primaryButton: {
-    backgroundColor: "#27ae60",
-    color: "white",
-    border: "none",
-    padding: "12px 24px",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "bold"
-  },
-  secondaryButton: {
-    backgroundColor: "#95a5a6",
-    color: "white",
-    border: "none",
-    padding: "12px 24px",
-    borderRadius: "4px",
-    cursor: "pointer",
-    fontSize: "16px",
-    fontWeight: "bold"
-  }
-};
 
 export default PasswordResetRequest;

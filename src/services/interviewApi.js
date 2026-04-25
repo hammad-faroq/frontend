@@ -1,7 +1,8 @@
 import axios from "axios";
+import API from "../services/api";
 
 // ---------------- Base URL ----------------
-const BASE_API_URL = 'https://backendfyp-production-00a3.up.railway.app/api/interview';
+const BASE_API_URL = API.INTERVIEW;
 
 // ---------------- Auth Helpers ----------------
 const getAuthHeaders = () => {
@@ -241,21 +242,6 @@ export const reviewCandidateAnswers = async (interviewId) => {
   }
 };
 
-// export const finalizeInterview = async (interviewId) => {
-//   try {
-//     const res = await axios.post(
-//       `${BASE_API_URL}/hr/interview/${interviewId}/finalize/`,
-//       {},
-//       { headers: getAuthHeaders() }
-//     );
-//     return res.data;
-//   } catch (err) {
-//     if (err.response?.status === 401) handleUnauthorized();
-//     console.error("finalizeInterview error:", err);
-//     throw err;
-//   }
-// };
-
 export const getHRAnalytics = async () => {
   try {
     const res = await axios.get(`${BASE_API_URL}/admin/analytics/`, {
@@ -371,47 +357,6 @@ export const completePreparationModule = async (moduleId) => {
   }
 };
 
-// export const gradeCandidateAnswer = async (answerId, data) => {
-//   const token = localStorage.getItem("token");
-
-//   const res = await fetch(
-//     `http://127.0.0.1:8000/api/interview/hr/answer/${answerId}/grade/`,
-//     {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: token ? `Token ${token}` : "",
-//       },
-//       body: JSON.stringify({
-//         score: data.score,
-//         feedback: data.feedback,
-//       }),
-//     }
-//   );
-
-//   if (!res.ok) {
-//     const err = await res.json();
-//     throw err;
-//   }
-
-//   return res.json();
-// };
-
-// export const fetchAllQuestions = async () => {
-//   const token = localStorage.getItem("token");
-
-//   const res = await fetch(
-//     "http://127.0.0.1:8000/api/interview/questions/",
-//     {
-//       headers: {
-//         Authorization: token ? `Token ${token}` : "",
-//       },
-//     }
-//   );
-
-//   if (!res.ok) throw await res.json();
-//   return res.json();
-// };
 
 export const assignQuestionsToInterview = async (interviewId, questionIds) => {
   try {
@@ -736,29 +681,6 @@ export const getCandidateInterviewDetail = async (interviewId) => {
     throw err;
   }
 };
-
-// ================= COMPLETE CANDIDATE INTERVIEW =================
-// export const completeCandidateInterview = async (interviewId) => {
-//   try {
-//     // First, submit all answers (if any remaining)
-//     const questions = await getCandidateInterviewQuestions(interviewId);
-//     const answeredCount = questions.answered_count || 0;
-//     const totalQuestions = questions.total_questions || 0;
-    
-//     if (answeredCount < totalQuestions) {
-//       console.warn(`Interview has ${totalQuestions - answeredCount} unanswered questions`);
-//     }
-    
-//     // The interview will be automatically marked as 'submitted' when all questions are answered
-//     // Or you can call a specific endpoint if you have one
-    
-//     console.log("Interview completion process started");
-//     return { success: true, message: "Interview completed successfully" };
-//   } catch (err) {
-//     console.error("completeCandidateInterview error:", err);
-//     throw err;
-//   }
-// };
 
 // ================= CANDIDATE INTERVIEW FLOW MANAGER =================
 export const manageCandidateInterviewFlow = async (interviewId, action, data = null) => {

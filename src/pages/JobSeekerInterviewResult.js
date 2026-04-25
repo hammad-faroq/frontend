@@ -84,7 +84,7 @@ function JobSeekerInterviewResult() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
             <button
@@ -108,7 +108,7 @@ function JobSeekerInterviewResult() {
   if (error || !interview) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8 overflow-y-auto">
           <div className="max-w-4xl mx-auto">
             <button
@@ -144,7 +144,7 @@ function JobSeekerInterviewResult() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">

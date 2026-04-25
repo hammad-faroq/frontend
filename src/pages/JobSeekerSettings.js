@@ -1,6 +1,8 @@
 // src/pages/JobSeekerSettings.js
 import  { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
+import toast from "react-hot-toast";
 
 function JobSeekerSettings() {
   const [settings, setSettings] = useState({
@@ -18,7 +20,7 @@ function JobSeekerSettings() {
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backendfyp-production-00a3.up.railway.app/accounts/settings/", {
+      const response = await fetch(`${API.BASE_URL}/accounts/settings/`, {
         method: "PUT",
         headers: {
           "Authorization": `Token ${token}`,
@@ -28,13 +30,13 @@ function JobSeekerSettings() {
       });
 
       if (response.ok) {
-        alert("Settings saved successfully!");
+        toast.success("Settings saved successfully!");
       } else {
-        alert("Failed to save settings. Please try again.");
+        toast.error("Failed to save settings. Please try again.");
       }
     } catch (err) {
       console.error("Error saving settings:", err);
-      alert("Failed to save settings. Please try again.");
+      toast.error("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -193,7 +195,7 @@ function JobSeekerSettings() {
               <button
                 onClick={() => {
                   if (window.confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-                    alert("Account deletion feature coming soon.");
+                    toast.success("Account deletion feature coming soon.");
                   }
                 }}
                 className="w-full text-left p-4 border border-red-200 rounded-lg hover:bg-red-50 text-red-600"

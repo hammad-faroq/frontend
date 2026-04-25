@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCurrentUser, getAuthHeaders } from '../utils/userHelper';
+import API from "../services/api";
 
 const AllJobsComponent = () => {
   const [jobs, setJobs] = useState([]);
@@ -13,7 +14,7 @@ const AllJobsComponent = () => {
   const [applyError, setApplyError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+  const API_BASE_URL = API.JOBS;
   const currentUser = getCurrentUser();
 
   useEffect(() => {

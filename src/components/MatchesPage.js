@@ -2,20 +2,155 @@ import React, { useState, useEffect, useCallback } from "react";
 import { getSimilarJobs, getAppliedJobs } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Sidebar from "../components/Sidebar";
+import API from "../services/api";
+import toast from "react-hot-toast";
 import {
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ClockIcon,
-  MapPinIcon,
-  BuildingOfficeIcon,
-  ArrowPathIcon,
-  BriefcaseIcon,
-  DocumentArrowUpIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
+  CheckCircleIcon, ExclamationTriangleIcon, ClockIcon,
+  MapPinIcon, BuildingOfficeIcon, ArrowPathIcon,
+  BriefcaseIcon, DocumentArrowUpIcon, EyeIcon,
+  MagnifyingGlassIcon, FunnelIcon,
 } from "@heroicons/react/24/outline";
+
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  .mp-wrap * { box-sizing: border-box; }
+  .mp-wrap { font-family: 'DM Sans', sans-serif; min-height: 100vh; background: #f5f6ff; color: #1e1b3a; }
+
+  /* Hero */
+  .mp-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 52%, #ede9fe 100%);
+    padding: 40px 40px 72px; border-bottom: 1px solid #ddd6fe;
+  }
+  .mp-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .2; pointer-events: none; }
+  .mp-blob--1 { width: 400px; height: 400px; background: radial-gradient(circle,#6366f1,transparent); top: -100px; left: -60px; animation: mp-drift 12s ease-in-out infinite alternate; }
+  .mp-blob--2 { width: 260px; height: 260px; background: radial-gradient(circle,#10b981,transparent); bottom: -60px; right: 10%; animation: mp-drift 15s ease-in-out infinite alternate-reverse; }
+  @keyframes mp-drift { 0%{transform:translate(0,0)} 100%{transform:translate(22px,12px)} }
+  .mp-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(99,102,241,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.06) 1px,transparent 1px); background-size: 40px 40px; }
+
+  .mp-hero-inner { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
+  .mp-hero-top { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .mp-hero-title { font-family: 'Syne', sans-serif; font-size: clamp(22px,3.5vw,34px); font-weight: 800; color: #1e1b3a; margin: 0; letter-spacing: -.3px; }
+  .mp-hero-sub { font-size: 15px; color: #6b7280; margin: 0; }
+  .mp-hero-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  /* Stats strip */
+  .mp-stats-strip { position: relative; z-index: 10; margin: -28px auto 0; max-width: 1100px; padding: 0 40px; }
+  .mp-stats-inner { background: #fff; border: 1px solid #e0e7ff; border-radius: 14px; display: grid; grid-template-columns: repeat(3,1fr); box-shadow: 0 8px 32px rgba(99,102,241,.1); }
+  .mp-stat-item { padding: 18px 20px; display: flex; align-items: center; gap: 14px; }
+  .mp-stat-item:not(:last-child) { border-right: 1px solid #e0e7ff; }
+  .mp-stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .mp-stat-icon svg { width: 20px; height: 20px; }
+  .mp-stat-label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: #9ca3af; }
+  .mp-stat-val { font-size: 22px; font-weight: 800; color: #1e1b3a; }
+
+  /* Main */
+  .mp-main { max-width: 1100px; margin: 0 auto; padding: 36px 40px 80px; }
+
+  /* Search/filter bar */
+  .mp-filter-bar { background: #fff; border: 1px solid #e0e7ff; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 4px 16px rgba(99,102,241,.06); }
+  .mp-search-wrap { position: relative; flex: 1; }
+  .mp-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #9ca3af; }
+  .mp-search-input { width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #e0e7ff; border-radius: 10px; font-family: 'DM Sans',sans-serif; font-size: 14px; color: #1e1b3a; background: #f5f6ff; outline: none; transition: border-color .2s; }
+  .mp-search-input:focus { border-color: #a5b4fc; background: #fff; }
+  .mp-filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .mp-select { padding: 8px 12px; border: 1px solid #e0e7ff; border-radius: 10px; font-family: 'DM Sans',sans-serif; font-size: 13px; color: #4b5563; background: #f5f6ff; outline: none; cursor: pointer; transition: border-color .2s; }
+  .mp-select:focus { border-color: #a5b4fc; }
+
+  /* Banners */
+  .mp-banner { border-radius: 14px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px; }
+  .mp-banner--green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .mp-banner--red { background: #fef2f2; border: 1px solid #fecaca; }
+  .mp-banner svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; }
+  .mp-banner p { margin: 0; font-size: 14px; }
+  .mp-banner--green p { color: #15803d; }
+  .mp-banner--red p { color: #b91c1c; }
+
+  /* Section heading */
+  .mp-section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .mp-section-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: #1e1b3a; margin: 0; }
+  .mp-section-sub { font-size: 13px; color: #9ca3af; }
+
+  /* Job cards grid */
+  .mp-grid-cards { display: grid; grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap: 20px; }
+
+  /* Job card */
+  .mp-card { background: #fff; border: 1px solid #e8eaf6; border-radius: 16px; overflow: hidden; transition: all .25s; animation: mp-in .4s ease both; }
+  .mp-card:hover { border-color: #c7d2fe; box-shadow: 0 8px 32px rgba(99,102,241,.12); transform: translateY(-2px); }
+  @keyframes mp-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  .mp-card-body { padding: 20px; }
+  .mp-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; gap: 10px; }
+  .mp-card-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #1e1b3a; cursor: pointer; transition: color .2s; line-height: 1.3; }
+  .mp-card-title:hover { color: #4f46e5; }
+  .mp-match-pill { flex-shrink: 0; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+  .mp-match-pill--green { background: #dcfce7; color: #15803d; }
+  .mp-match-pill--yellow { background: #fef9c3; color: #92400e; }
+  .mp-match-pill--orange { background: #ffedd5; color: #9a3412; }
+  .mp-match-pill--red { background: #fee2e2; color: #b91c1c; }
+  .mp-card-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .mp-card-meta-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: #6b7280; }
+  .mp-card-meta-item svg { width: 13px; height: 13px; }
+
+  /* Match bar */
+  .mp-bar-wrap { margin-bottom: 14px; }
+  .mp-bar-labels { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+  .mp-bar-label { color: #6b7280; font-weight: 500; }
+  .mp-bar-val { color: #1e1b3a; font-weight: 700; }
+  .mp-bar-bg { width: 100%; height: 6px; background: #e0e7ff; border-radius: 100px; overflow: hidden; }
+  .mp-bar-fill { height: 100%; border-radius: 100px; transition: width .6s ease; }
+  .mp-bar-fill--green { background: linear-gradient(90deg,#10b981,#34d399); }
+  .mp-bar-fill--yellow { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+  .mp-bar-fill--orange { background: linear-gradient(90deg,#f97316,#fb923c); }
+  .mp-bar-fill--red { background: linear-gradient(90deg,#ef4444,#f87171); }
+
+  /* Card desc */
+  .mp-card-desc { font-size: 13px; color: #6b7280; line-height: 1.6; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* Card details */
+  .mp-card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; padding: 12px; background: #f5f6ff; border-radius: 10px; }
+  .mp-detail-label { font-size: 11px; color: #9ca3af; font-weight: 600; }
+  .mp-detail-val { font-size: 13px; font-weight: 600; color: #1e1b3a; }
+
+  /* Card actions */
+  .mp-card-actions { display: flex; gap: 8px; }
+  .mp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; font-family: 'DM Sans',sans-serif; flex: 1; }
+  .mp-btn svg { width: 14px; height: 14px; }
+  .mp-btn--ghost { background: #f5f6ff; border: 1px solid #e0e7ff; color: #4f46e5; }
+  .mp-btn--ghost:hover { background: #eef2ff; }
+  .mp-btn--primary { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,.2); }
+  .mp-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79,70,229,.3); }
+  .mp-btn--disabled { background: #f3f4f6; border: 1px solid #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+  .mp-btn--orange { background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; }
+
+  /* Empty state */
+  .mp-empty { text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #e0e7ff; border-radius: 16px; }
+  .mp-empty-emoji { font-size: 52px; margin-bottom: 16px; }
+  .mp-empty-title { font-family: 'Syne',sans-serif; font-size: 20px; font-weight: 700; color: #1e1b3a; margin-bottom: 8px; }
+  .mp-empty-sub { font-size: 14px; color: #9ca3af; margin-bottom: 24px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+  /* Tips */
+  .mp-tips { margin-top: 32px; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 14px; padding: 20px 24px; }
+  .mp-tips-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; color: #4f46e5; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .mp-tips ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+  .mp-tips li { font-size: 13px; color: #4b5563; display: flex; gap: 8px; }
+  .mp-tips li::before { content: "→"; color: #6366f1; }
+
+  /* Header action buttons */
+  .mp-action-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s; font-family: 'DM Sans',sans-serif; border: none; }
+  .mp-action-btn--outline { background: #fff; border: 1px solid #e0e7ff; color: #4b5563; }
+  .mp-action-btn--outline:hover { border-color: #c7d2fe; color: #4f46e5; }
+  .mp-action-btn--primary { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,.25); }
+  .mp-action-btn svg { width: 15px; height: 15px; }
+
+  /* Loading */
+  .mp-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 20px; }
+  .mp-spinner { width: 44px; height: 44px; border: 3px solid #e0e7ff; border-top-color: #6366f1; border-radius: 50%; animation: mp-spin .8s linear infinite; }
+  @keyframes mp-spin { to{transform:rotate(360deg)} }
+
+  @media(max-width:900px){ .mp-stats-inner{grid-template-columns:1fr} .mp-stat-item:not(:last-child){border-right:none;border-bottom:1px solid #e0e7ff} }
+  @media(max-width:640px){ .mp-hero{padding:28px 16px 60px} .mp-stats-strip{padding:0 16px} .mp-main{padding:28px 16px 60px} .mp-grid-cards{grid-template-columns:1fr} }
+`;
 
 function MatchesPage() {
   const [matchedJobs, setMatchedJobs] = useState([]);
@@ -25,669 +160,226 @@ function MatchesPage() {
   const [applyingJobId, setApplyingJobId] = useState(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [filter, setFilter] = useState("all"); // "all", "unapplied", "applied"
+  const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("score"); // "score", "date", "title"
-
+  const [sortBy, setSortBy] = useState("score");
   const navigate = useNavigate();
   const { logout, user } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
-
-  // Memoized fetch function
   const fetchMatchedJobs = useCallback(async (isRefresh = false) => {
-    if (isRefresh) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    setError("");
-    setSuccessMessage("");
-
+    if (isRefresh) setRefreshing(true); else setLoading(true);
+    setError(""); setSuccessMessage("");
     try {
-      const [matchesRes, appliedRes] = await Promise.allSettled([
-        getSimilarJobs(),
-        getAppliedJobs(),
-      ]);
-
-      let hasJobs = false;
-
-      // Handle matched jobs
+      const [matchesRes, appliedRes] = await Promise.allSettled([getSimilarJobs(), getAppliedJobs()]);
       if (matchesRes.status === "fulfilled") {
         const response = matchesRes.value;
-        const jobs = Array.isArray(response.matched_jobs)
-          ? response.matched_jobs
-          : Array.isArray(response)
-          ? response
-          : [];
-
+        const jobs = Array.isArray(response.matched_jobs) ? response.matched_jobs : Array.isArray(response) ? response : [];
         if (jobs.length > 0) {
           setMatchedJobs(jobs);
-          hasJobs = true;
-          
-          if (isRefresh) {
-            setSuccessMessage(`✅ Found ${jobs.length} matching jobs!`);
-            setTimeout(() => setSuccessMessage(""), 3000);
-          }
+          if (isRefresh) { setSuccessMessage(`✅ Found ${jobs.length} matching jobs!`); setTimeout(()=>setSuccessMessage(""),3000); }
         } else {
-          setError(response.message || "No matching jobs found.");
-          setMatchedJobs([]);
+          setError(response.message || "No matching jobs found."); setMatchedJobs([]);
         }
-      } else {
-        console.error("Matches fetch failed:", matchesRes.reason);
-        setError("Failed to fetch matched jobs. Please try again.");
-        setMatchedJobs([]);
-      }
-
-      // Handle applied jobs
+      } else { setError("Failed to fetch matched jobs."); setMatchedJobs([]); }
       if (appliedRes.status === "fulfilled") {
-        const applied = Array.isArray(appliedRes.value.applied_jobs)
-          ? appliedRes.value.applied_jobs
-          : Array.isArray(appliedRes.value)
-          ? appliedRes.value
-          : [];
+        const applied = Array.isArray(appliedRes.value.applied_jobs) ? appliedRes.value.applied_jobs : Array.isArray(appliedRes.value) ? appliedRes.value : [];
         setAppliedJobs(applied);
-      } else {
-        console.error("Applied jobs fetch failed:", appliedRes.reason);
-        setAppliedJobs([]);
-      }
-
-      // If no jobs found and not an error response, show helpful message
-      if (!hasJobs && matchesRes.status === "fulfilled") {
-        const response = matchesRes.value;
-        if (response.message && response.message.includes("No resume")) {
-          setError("Please upload your resume first to get job matches.");
-        } else if (response.message && response.message.includes("No open")) {
-          setError("No open positions available at the moment.");
-        }
-      }
-
-    } catch (err) {
-      console.error("Fetch error:", err);
-      setError("Something went wrong while loading job matches.");
-      setMatchedJobs([]);
-      setAppliedJobs([]);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+      } else setAppliedJobs([]);
+    } catch { setError("Something went wrong while loading job matches."); setMatchedJobs([]); setAppliedJobs([]); }
+    finally { setLoading(false); setRefreshing(false); }
   }, []);
 
-  useEffect(() => {
-    fetchMatchedJobs();
-  }, [fetchMatchedJobs]);
+  useEffect(() => { fetchMatchedJobs(); }, [fetchMatchedJobs]);
 
-  // Filter and sort jobs
   const filteredAndSortedJobs = React.useMemo(() => {
     let filtered = matchedJobs.filter(job => {
-      // Apply search filter
       if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          job.title?.toLowerCase().includes(searchLower) ||
-          job.company?.toLowerCase().includes(searchLower) ||
-          job.location?.toLowerCase().includes(searchLower) ||
-          job.description?.toLowerCase().includes(searchLower)
-        );
+        const s = searchTerm.toLowerCase();
+        return job.title?.toLowerCase().includes(s) || job.company?.toLowerCase().includes(s) || job.location?.toLowerCase().includes(s);
       }
       return true;
     });
-
-    // Apply application status filter
-    if (filter === "unapplied") {
-      filtered = filtered.filter(job => 
-        !appliedJobs.some(applied => applied.job_id === job.job_id)
-      );
-    } else if (filter === "applied") {
-      filtered = filtered.filter(job => 
-        appliedJobs.some(applied => applied.job_id === job.job_id)
-      );
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const scoreA = a.score || a.match_score || 0;
-      const scoreB = b.score || b.match_score || 0;
-
-      switch (sortBy) {
-        case "score":
-          return scoreB - scoreA;
-        case "title":
-          return (a.title || "").localeCompare(b.title || "");
-        case "date":
-          // If you have a date field, use it
-          return 0; // Default
-        default:
-          return scoreB - scoreA;
-      }
+    if (filter === "unapplied") filtered = filtered.filter(job => !appliedJobs.some(a => a.job_id === job.job_id));
+    else if (filter === "applied") filtered = filtered.filter(job => appliedJobs.some(a => a.job_id === job.job_id));
+    filtered.sort((a,b) => {
+      const sA = a.score||a.match_score||0, sB = b.score||b.match_score||0;
+      if (sortBy === "score") return sB - sA;
+      if (sortBy === "title") return (a.title||"").localeCompare(b.title||"");
+      return sB - sA;
     });
-
     return filtered;
   }, [matchedJobs, appliedJobs, filter, searchTerm, sortBy]);
 
-  const handleApply = async (job) => {
-    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
-    if (!token) {
-      alert("Please login first!");
-      navigate("/login");
-      return;
-    }
+  const getScoreClass = (pct) => pct >= 80 ? "green" : pct >= 50 ? "yellow" : pct >= 25 ? "orange" : "red";
+  const getScoreLabel = (pct) => pct >= 80 ? "Excellent Match" : pct >= 50 ? "Good Match" : pct >= 25 ? "Fair Match" : "Low Match";
 
-    // Check if already applied
-    const isAlreadyApplied = appliedJobs.some((a) => a.job_id === job.job_id);
-    if (isAlreadyApplied) {
-      alert("You have already applied for this job!");
-      return;
-    }
+  const unappliedCount = matchedJobs.filter(j=>!appliedJobs.some(a=>a.job_id===j.job_id)).length;
+  const appliedCount = matchedJobs.filter(j=>appliedJobs.some(a=>a.job_id===j.job_id)).length;
 
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = ".pdf,.doc,.docx";
-    fileInput.className = "hidden";
+  if (loading) return (
+    <div className="mp-wrap"><style>{styles}</style>
+      <div className="mp-loading"><div className="mp-spinner"/><p style={{color:"#6366f1",fontWeight:500}}>Finding your matches…</p></div>
+    </div>
+  );
 
-    fileInput.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) {
-        setApplyingJobId(null);
-        return;
-      }
+  return (
+    <div className="mp-wrap">
+      <style>{styles}</style>
 
-      // Validate file size (5MB max)
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size exceeds 5MB limit.");
-        setApplyingJobId(null);
-        return;
-      }
-
-      // Validate file type
-      const validTypes = ['.pdf', '.doc', '.docx'];
-      const fileExt = '.' + file.name.split('.').pop().toLowerCase();
-      if (!validTypes.includes(fileExt)) {
-        alert("Please upload PDF, DOC, or DOCX files only.");
-        setApplyingJobId(null);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("resume", file);
-      formData.append("job_id", job.job_id);
-
-      try {
-        setApplyingJobId(job.job_id);
-        
-        // Try the standard endpoint
-        const endpoint = `https://backendfyp-production-00a3.up.railway.app/api/jobs/${job.job_id}/apply/`;
-        
-        const res = await fetch(endpoint, {
-          method: "POST",
-          headers: { 
-            "Authorization": `Token ${token}`,
-          },
-          body: formData,
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          alert(`✅ Applied successfully for ${job.title}`);
-          
-          // Refresh applied jobs list
-          const updatedApplied = await getAppliedJobs();
-          setAppliedJobs(Array.isArray(updatedApplied) ? updatedApplied : []);
-          
-          // Refresh matches to update UI
-          fetchMatchedJobs(true);
-        } else {
-          const errorData = await res.json();
-          alert(`❌ Application failed: ${errorData?.error || "Please try again"}`);
-        }
-      } catch (err) {
-        console.error("Apply error:", err);
-        alert("❌ Error applying for the job. Please try again.");
-      } finally {
-        setApplyingJobId(null);
-        fileInput.remove();
-      }
-    };
-
-    document.body.appendChild(fileInput);
-    fileInput.click();
-  };
-
-  const handleRefresh = () => {
-    fetchMatchedJobs(true);
-  };
-
-  const getMatchScoreColor = (score) => {
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-yellow-100 text-yellow-800";
-    if (score >= 40) return "bg-orange-100 text-orange-800";
-    return "bg-red-100 text-red-800";
-  };
-
-  const getMatchScoreLabel = (score) => {
-    if (score >= 80) return "Excellent Match";
-    if (score >= 60) return "Good Match";
-    if (score >= 40) return "Fair Match";
-    return "Low Match";
-  };
-
-  const handleJobClick = (jobId) => {
-    navigate(`/jobs/${jobId}`);
-  };
-
-  const unappliedCount = matchedJobs.filter(job => 
-    !appliedJobs.some(applied => applied.job_id === job.job_id)
-  ).length;
-
-  const appliedCount = matchedJobs.filter(job => 
-    appliedJobs.some(applied => applied.job_id === job.job_id)
-  ).length;
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
-        <div className="flex-1 min-h-screen bg-gray-50 p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Your Job Matches</h1>
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-xl shadow p-6 animate-pulse">
-                  <div className="h-6 bg-gray-300 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-gray-300 rounded w-1/2 mb-3"></div>
-                  <div className="h-4 bg-gray-300 rounded w-2/3 mb-6"></div>
-                  <div className="h-10 bg-gray-300 rounded w-full"></div>
-                </div>
-              ))}
-            </div>
+      {/* Hero */}
+      <div className="mp-hero">
+        <div className="mp-blob mp-blob--1"/><div className="mp-blob mp-blob--2"/><div className="mp-grid"/>
+        <div className="mp-hero-inner">
+          <div className="mp-hero-top">
+            <h1 className="mp-hero-title">Your Job Matches</h1>
+            <p className="mp-hero-sub">Jobs tailored to your skills and experience</p>
+          </div>
+          <div className="mp-hero-actions">
+            <button className="mp-action-btn mp-action-btn--outline" onClick={()=>fetchMatchedJobs(true)} disabled={refreshing}>
+              <ArrowPathIcon style={{width:15,height:15,animation:refreshing?"mp-spin .8s linear infinite":undefined}}/>{refreshing?"Refreshing…":"Refresh"}
+            </button>
+            <button className="mp-action-btn mp-action-btn--primary" onClick={()=>navigate("/jobseeker/upload-resume")}>
+              <DocumentArrowUpIcon/>Upload Resume
+            </button>
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* Stats strip */}
+      <div className="mp-stats-strip">
+        <div className="mp-stats-inner">
+          <div className="mp-stat-item">
+            <div className="mp-stat-icon" style={{background:"#eef2ff"}}><BriefcaseIcon style={{color:"#4f46e5"}}/></div>
+            <div><div className="mp-stat-label">Total Matches</div><div className="mp-stat-val">{matchedJobs.length}</div></div>
+          </div>
+          <div className="mp-stat-item">
+            <div className="mp-stat-icon" style={{background:"#f0fdf4"}}><CheckCircleIcon style={{color:"#16a34a"}}/></div>
+            <div><div className="mp-stat-label">Applied</div><div className="mp-stat-val">{appliedCount}</div></div>
+          </div>
+          <div className="mp-stat-item">
+            <div className="mp-stat-icon" style={{background:"#f5f3ff"}}><ClockIcon style={{color:"#7c3aed"}}/></div>
+            <div><div className="mp-stat-label">Available</div><div className="mp-stat-val">{unappliedCount}</div></div>
+          </div>
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 min-h-screen p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Your Job Matches</h1>
-                <p className="text-gray-600 mt-2">
-                  Jobs tailored to your skills and experience
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2 transition-colors"
-                >
-                  <ArrowPathIcon className={`h-5 w-5 ${refreshing ? "animate-spin" : ""}`} />
-                  {refreshing ? "Refreshing..." : "Refresh"}
-                </button>
-                <button
-                  onClick={() => navigate("/resume-upload")}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
-                >
-                  <DocumentArrowUpIcon className="h-5 w-5" />
-                  Upload Resume
-                </button>
-              </div>
+      <div className="mp-main">
+        {/* Filter bar */}
+        <div className="mp-filter-bar">
+          <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
+            <div className="mp-search-wrap" style={{flex:1,minWidth:200}}>
+              <MagnifyingGlassIcon/>
+              <input className="mp-search-input" placeholder="Search by title, company, or location…" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}/>
             </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-xl shadow p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <BriefcaseIcon className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-500">Total Matches</p>
-                    <p className="text-2xl font-bold">{matchedJobs.length}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircleIcon className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-500">Applied Jobs</p>
-                    <p className="text-2xl font-bold">{appliedCount}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <ClockIcon className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-500">Available to Apply</p>
-                    <p className="text-2xl font-bold">{unappliedCount}</p>
-                  </div>
-                </div>
-              </div>
+            <div className="mp-filter-row">
+              <FunnelIcon style={{width:16,height:16,color:"#6b7280"}}/>
+              <select className="mp-select" value={filter} onChange={e=>setFilter(e.target.value)}>
+                <option value="all">All Jobs</option>
+                <option value="unapplied">Not Applied</option>
+                <option value="applied">Applied</option>
+              </select>
+              <select className="mp-select" value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+                <option value="score">Sort by Match</option>
+                <option value="title">Sort by Title</option>
+              </select>
             </div>
           </div>
+        </div>
 
-          {/* Search and Filter Bar */}
-          <div className="mb-6 bg-white rounded-xl shadow p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Search Input */}
-              <div className="flex-1 relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search jobs by title, company, or location..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Filters */}
-              <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <FunnelIcon className="h-5 w-5 text-gray-500" />
-                  <select
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="all">All Jobs</option>
-                    <option value="unapplied">Not Applied</option>
-                    <option value="applied">Already Applied</option>
-                  </select>
-                </div>
-                
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="score">Sort by Match Score</option>
-                  <option value="title">Sort by Title</option>
-                </select>
-              </div>
+        {/* Messages */}
+        {successMessage && (
+          <div className="mp-banner mp-banner--green"><CheckCircleIcon style={{color:"#16a34a"}}/><p>{successMessage}</p></div>
+        )}
+        {error && (
+          <div className="mp-banner mp-banner--red">
+            <ExclamationTriangleIcon style={{color:"#dc2626"}}/>
+            <div>
+              <p style={{fontWeight:600}}>{error}</p>
+              {error.includes("resume") && <button style={{fontSize:13,color:"#b91c1c",textDecoration:"underline",background:"none",border:"none",cursor:"pointer",marginTop:4}} onClick={()=>navigate("/jobseeker/upload-resume")}>Upload your resume now →</button>}
             </div>
           </div>
+        )}
 
-          {/* Messages */}
-          {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center">
-              <CheckCircleIcon className="h-5 w-5 text-green-600 mr-2" />
-              <p className="text-green-700">{successMessage}</p>
+        {/* Empty */}
+        {filteredAndSortedJobs.length === 0 && !error && (
+          <div className="mp-empty">
+            <div className="mp-empty-emoji">📄</div>
+            <h3 className="mp-empty-title">{searchTerm ? "No matching jobs found" : "No job matches yet"}</h3>
+            <p className="mp-empty-sub">{searchTerm ? "Try a different search term or clear your filters." : "Upload your resume to get personalized job recommendations."}</p>
+            <button className="mp-btn mp-btn--primary" style={{width:"auto",padding:"10px 24px",margin:"0 auto"}} onClick={()=>searchTerm?(setSearchTerm(""),setFilter("all")):navigate("/jobseeker/upload-resume")}>
+              {searchTerm ? "Clear Filters" : <><DocumentArrowUpIcon/>Upload Resume</>}
+            </button>
+          </div>
+        )}
+
+        {/* Cards */}
+        {filteredAndSortedJobs.length > 0 && (
+          <>
+            <div className="mp-section-head">
+              <h2 className="mp-section-title">Recommended for you ({filteredAndSortedJobs.length}){searchTerm && ` for "${searchTerm}"`}</h2>
+              {filter !== "all" && <span className="mp-section-sub">{filter === "unapplied" ? "Unapplied only" : "Applied only"}</span>}
             </div>
-          )}
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center">
-              <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
-              <div className="flex-1">
-                <p className="text-red-700 font-medium">{error}</p>
-                {error.includes("No resume") && (
-                  <button
-                    onClick={() => navigate("/resume-upload")}
-                    className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-                  >
-                    Upload your resume now →
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* No Jobs State */}
-          {!loading && !error && filteredAndSortedJobs.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl shadow">
-              <div className="text-6xl mb-4 text-gray-300">📄</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                {searchTerm ? "No matching jobs found" : "No job matches yet"}
-              </h3>
-              <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                {searchTerm 
-                  ? "Try a different search term or clear your filters."
-                  : "Upload your resume to get personalized job recommendations based on your skills and experience."}
-              </p>
-              {searchTerm ? (
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setFilter("all");
-                  }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto"
-                >
-                  Clear Filters
-                </button>
-              ) : (
-                <button
-                  onClick={() => navigate("/resume-upload")}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto"
-                >
-                  <DocumentArrowUpIcon className="h-5 w-5" />
-                  Upload Resume
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Job Cards */}
-          {filteredAndSortedJobs.length > 0 && (
-            <>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Recommended for you ({filteredAndSortedJobs.length})
-                  {searchTerm && ` for "${searchTerm}"`}
-                </h2>
-                <div className="text-sm text-gray-500">
-                  {filter === "unapplied" && "Showing only unapplied jobs"}
-                  {filter === "applied" && "Showing only applied jobs"}
-                </div>
-              </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedJobs.map((job) => {
-                  const isApplied = appliedJobs.some((a) => a.job_id === job.job_id);
-                  const isApplying = applyingJobId === job.job_id;
-                  const matchScore = job.score || job.match_score || 0;
-                  const matchPercentage = Math.round(matchScore * 100);
-                  
-                  return (
-                    <div
-                      key={job.job_id}
-                      className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200"
-                    >
-                      <div className="p-6">
-                        {/* Job Header */}
-                        <div className="mb-4">
-                          <div className="flex justify-between items-start mb-3">
-                            <div 
-                              className="cursor-pointer hover:text-blue-600 transition-colors"
-                              onClick={() => handleJobClick(job.job_id)}
-                            >
-                              <h3 className="font-bold text-lg text-gray-900 line-clamp-2">
-                                {job.title}
-                              </h3>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getMatchScoreColor(matchPercentage)}`}>
-                              {matchPercentage}% Match
-                            </span>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            {job.company && (
-                              <div className="flex items-center gap-1">
-                                <BuildingOfficeIcon className="h-4 w-4" />
-                                <span className="truncate">{job.company}</span>
-                              </div>
-                            )}
-                            {job.location && (
-                              <div className="flex items-center gap-1">
-                                <MapPinIcon className="h-4 w-4" />
-                                <span className="truncate">{job.location}</span>
-                              </div>
-                            )}
-                          </div>
+            <div className="mp-grid-cards">
+              {filteredAndSortedJobs.map((job, i) => {
+                const isApplied = appliedJobs.some(a=>a.job_id===job.job_id);
+                const isApplying = applyingJobId === job.job_id;
+                const pct = Math.round((job.score||job.match_score||0)*100);
+                const cls = getScoreClass(pct);
+                return (
+                  <div key={job.job_id} className="mp-card" style={{animationDelay:`${i*40}ms`}}>
+                    <div className="mp-card-body">
+                      <div className="mp-card-top">
+                        <h3 className="mp-card-title" onClick={()=>navigate(`/jobs/${job.job_id}`)}>{job.title}</h3>
+                        <span className={`mp-match-pill mp-match-pill--${cls}`}>{pct}% Match</span>
+                      </div>
+                      <div className="mp-card-meta">
+                        {job.company && <span className="mp-card-meta-item"><BuildingOfficeIcon/>{job.company}</span>}
+                        {job.location && <span className="mp-card-meta-item"><MapPinIcon/>{job.location}</span>}
+                      </div>
+                      <div className="mp-bar-wrap">
+                        <div className="mp-bar-labels">
+                          <span className="mp-bar-label">{getScoreLabel(pct)}</span>
+                          <span className="mp-bar-val">{pct}%</span>
                         </div>
-
-                        {/* Match Details */}
-                        <div className="mb-6">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">
-                              {getMatchScoreLabel(matchPercentage)}
-                            </span>
-                            <span className="text-sm font-bold text-gray-900">
-                              {matchPercentage}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${
-                                matchPercentage >= 80 ? "bg-green-500" :
-                                matchPercentage >= 60 ? "bg-yellow-500" :
-                                matchPercentage >= 40 ? "bg-orange-500" : "bg-red-500"
-                              }`}
-                              style={{ width: `${Math.min(matchPercentage, 100)}%` }}
-                            ></div>
-                          </div>
-                          {job.source && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Powered by: {job.source}
-                            </p>
-                          )}
+                        <div className="mp-bar-bg"><div className={`mp-bar-fill mp-bar-fill--${cls}`} style={{width:`${Math.min(pct,100)}%`}}/></div>
+                      </div>
+                      {job.description && <p className="mp-card-desc">{job.description}</p>}
+                      {(job.salary_range||job.type) && (
+                        <div className="mp-card-details">
+                          {job.salary_range && <div><div className="mp-detail-label">Salary</div><div className="mp-detail-val">{job.salary_range}</div></div>}
+                          {job.type && <div><div className="mp-detail-label">Type</div><div className="mp-detail-val">{job.type}</div></div>}
                         </div>
-
-                        {/* Description Preview */}
-                        {job.description && (
-                          <div className="mb-6">
-                            <p className="text-sm text-gray-600 line-clamp-3">
-                              {job.description}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Job Details */}
-                        <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
-                          {job.salary_range && (
-                            <div>
-                              <p className="text-gray-500">Salary</p>
-                              <p className="font-medium text-gray-900">{job.salary_range}</p>
-                            </div>
-                          )}
-                          {job.type && (
-                            <div>
-                              <p className="text-gray-500">Type</p>
-                              <p className="font-medium text-gray-900">{job.type}</p>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          <button
-                            onClick={() => handleJobClick(job.job_id)}
-                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
-                          >
-                            <EyeIcon className="h-4 w-4" />
-                            View Details
-                          </button>
-                          
-                          <button
-                            onClick={() => handleApply(job)}
-                            disabled={isApplied || isApplying}
-                            className={`flex-1 px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors ${
-                              isApplied
-                                ? "bg-gray-100 text-gray-500 cursor-not-allowed"
-                                : isApplying
-                                ? "bg-yellow-500 text-white cursor-wait"
-                                : "bg-blue-600 text-white hover:bg-blue-700"
-                            }`}
-                          >
-                            {isApplying ? (
-                              <>
-                                <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                                Applying...
-                              </>
-                            ) : isApplied ? (
-                              <>
-                                <CheckCircleIcon className="h-4 w-4" />
-                                Applied
-                              </>
-                            ) : (
-                              <>
-                                <DocumentArrowUpIcon className="h-4 w-4" />
-                                Apply Now
-                              </>
-                            )}
-                          </button>
-                        </div>
+                      )}
+                      <div className="mp-card-actions">
+                        <button className="mp-btn mp-btn--ghost" onClick={()=>navigate(`/jobs/${job.job_id}`)}><EyeIcon/>View</button>
+                        <button
+                          className={`mp-btn ${isApplied?"mp-btn--disabled":isApplying?"mp-btn--orange":"mp-btn--primary"}`}
+                          disabled={isApplied||isApplying}
+                          onClick={()=>navigate(`/apply/${job.job_id}`)}
+                        >
+                          {isApplying ? <><ArrowPathIcon style={{animation:"mp-spin .8s linear infinite"}}/>Applying…</> : isApplied ? <><CheckCircleIcon/>Applied</> : <><DocumentArrowUpIcon/>Apply Now</>}
+                        </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-
-          {/* Tips Section */}
-          {filteredAndSortedJobs.length > 0 && (
-            <div className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                <ExclamationTriangleIcon className="h-5 w-5" />
-                Tips for better matches:
-              </h4>
-              <ul className="text-blue-700 space-y-2">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Update your resume with recent skills and experiences</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Apply to jobs with higher match scores first</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Complete your profile with all relevant information</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Check back regularly for new job postings</span>
-                </li>
-              </ul>
+                  </div>
+                );
+              })}
             </div>
-          )}
+          </>
+        )}
 
-          {/* Pagination or Load More */}
-          {filteredAndSortedJobs.length > 0 && filteredAndSortedJobs.length < matchedJobs.length && (
-            <div className="mt-8 text-center">
-              <button
-                onClick={() => {
-                  // In a real app, this would load more jobs
-                  alert("Loading more jobs... (This would fetch more in a real application)");
-                }}
-                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Load More Jobs
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Tips */}
+        {filteredAndSortedJobs.length > 0 && (
+          <div className="mp-tips">
+            <div className="mp-tips-title"><ExclamationTriangleIcon style={{width:16,height:16}}/>Tips for better matches</div>
+            <ul>
+              <li>Update your resume with recent skills and experiences</li>
+              <li>Apply to jobs with higher match scores first</li>
+              <li>Complete your profile with all relevant information</li>
+              <li>Check back regularly for new job postings</li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

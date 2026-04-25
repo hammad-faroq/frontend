@@ -86,7 +86,7 @@ const CandidateInterviewStart = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="text-center py-12">
@@ -102,7 +102,7 @@ const CandidateInterviewStart = () => {
   if (error && !interview) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-red-50 border border-red-200 rounded-xl p-6">
@@ -123,7 +123,7 @@ const CandidateInterviewStart = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">

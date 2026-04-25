@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { scheduleInterview } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 function InterviewModal({ job, onClose, onSuccess }) {
   const [submitting, setSubmitting] = useState(false);
@@ -59,28 +60,28 @@ function InterviewModal({ job, onClose, onSuccess }) {
     e.preventDefault();
     
     if (!job?.id || !interviewForm.candidate_email || !interviewForm.scheduled_time) {
-      alert("Job, Candidate Email, and Scheduled Time are required.");
+      toast.error("Job, Candidate Email, and Scheduled Time are required.");
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(interviewForm.candidate_email)) {
-      alert("Please enter a valid email address.");
+      toast.error("Please enter a valid email address.");
       return;
     }
 
     // Duration validation
     const duration = parseInt(interviewForm.duration_minutes);
     if (isNaN(duration) || duration < 15 || duration > 240) {
-      alert("Duration must be between 15 minutes and 4 hours.");
+      toast.error("Duration must be between 15 minutes and 4 hours.");
       return;
     }
 
     // Check if scheduled time is in the past
     const scheduledTime = new Date(interviewForm.scheduled_time);
     if (scheduledTime < new Date()) {
-      alert("Scheduled time cannot be in the past.");
+      toast.error("Scheduled time cannot be in the past.");
       return;
     }
 
@@ -88,7 +89,7 @@ function InterviewModal({ job, onClose, onSuccess }) {
     const maxFutureDate = new Date();
     maxFutureDate.setMonth(maxFutureDate.getMonth() + 3); // 3 months max
     if (scheduledTime > maxFutureDate) {
-      alert("Scheduled time cannot be more than 3 months in the future.");
+      toast.error("Scheduled time cannot be more than 3 months in the future.");
       return;
     }
 
@@ -105,11 +106,11 @@ function InterviewModal({ job, onClose, onSuccess }) {
       };
 
       await scheduleInterview(interviewData);
-      alert("Interview scheduled successfully!");
+      toast.success("Interview scheduled successfully!");
       onSuccess();
     } catch (err) {
       console.error("Schedule interview error:", err);
-      alert("Failed to schedule interview: " + (err.message || "Please check the candidate email and try again."));
+      toast.error("Failed to schedule interview: " + (err.message || "Please check the candidate email and try again."));
     } finally {
       setSubmitting(false);
     }

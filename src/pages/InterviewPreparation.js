@@ -1,5 +1,6 @@
 // src/pages/InterviewPreparation.js
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { 
   getInterviewPreparation, 
   generateMoreQuestions, 
@@ -10,7 +11,13 @@ import {
   getMockInterviewProgress  // Add this import
 } from "../services/api";
 import { useNavigate } from "react-router-dom";
+const normalizeScore = (score) => {
+  const num = Number(score);
+  if (!num || isNaN(num)) return 0;
 
+  // assume 0–100 if > 10
+  return num > 10 ? num / 10 : num;
+};
 function InterviewPreparation() {
   const [preparations, setPreparations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,27 +105,51 @@ function InterviewPreparation() {
     }
   }, [selectedJob]);
 
-  const handleGenerateMoreQuestions = async (jobId) => {
-    try {
-      const result = await generateMoreQuestions(jobId);
-      if (result && result.message === "More questions generated successfully") {
-        await fetchInterviewPreparations();
-        alert("✅ More questions generated successfully!");
+  // const handleGenerateMoreQuestions = async (jobId) => {
+  //   try {
+  //     const result = await generateMoreQuestions(jobId);
+  //     if (result && result.message === "More questions generated successfully") {
+  //       await fetchInterviewPreparations();
+  //       alert("✅ More questions generated successfully!");
         
-        if (selectedJob && selectedJob.job_id === jobId) {
-          const updatedData = await getInterviewPreparation();
-          const updatedPrep = updatedData.data?.find(p => p.job_id === jobId);
-          if (updatedPrep) {
-            setSelectedJob(updatedPrep);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error generating more questions:", error);
-      alert("❌ Failed to generate more questions. Please try again.");
-    }
-  };
+  //       if (selectedJob && selectedJob.job_id === jobId) {
+  //         const updatedData = await getInterviewPreparation();
+  //         const updatedPrep = updatedData.data?.find(p => p.job_id === jobId);
+  //         if (updatedPrep) {
+  //           setSelectedJob(updatedPrep);
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Error generating more questions:", error);
+  //     alert("❌ Failed to generate more questions. Please try again.");
+  //   }
+  // };
+const handleGenerateMoreQuestions = async (jobId) => {
+  try {
+    const result = await generateMoreQuestions(jobId);
 
+    toast.success(result.message || "Success");
+
+    // 🔥 FORCE REFRESH DATA
+    const updated = await getInterviewPreparation(); 
+    setPreparations(updated.data);
+
+    // 🔥 also update selected job if open
+    if (selectedJob?.job_id === jobId) {
+      const updatedPrep = updated.data.find(p => p.job_id === jobId);
+      setSelectedJob(updatedPrep);
+    }
+
+  } catch (error) {
+    const msg =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      "Something went wrong";
+
+    toast.error(msg);
+  }
+};
   const handleStartAIChat = (prep, mode = "interview") => {
     setSelectedJob(prep);
     setChatMode(mode);
@@ -152,43 +183,76 @@ function InterviewPreparation() {
     setUserAnswers({});
   };
 
-  const handleSendChat = async () => {
-    if (!chatMessage.trim() || !selectedJob) return;
+const handleSendChat = async () => {
+  if (!chatMessage.trim() || !selectedJob) return;
 
-    const userMessage = chatMessage.trim();
-    setChatMessage("");
-    setIsChatting(true);
+  const userMessage = chatMessage.trim();
+  setChatMessage("");
+  setIsChatting(true);
 
-    const newChatHistory = [
-      ...chatHistory,
-      { role: "user", content: userMessage }
-    ];
-    setChatHistory(newChatHistory);
+  const newChatHistory = [
+    ...chatHistory,
+    { role: "user", content: userMessage }
+  ];
 
-    try {
-      const response = await sendMockInterviewMessage(selectedJob.job_id, userMessage);
-      
+  setChatHistory(newChatHistory);
+
+  try {
+    const response = await sendMockInterviewMessage(
+      selectedJob.job_id,
+      userMessage
+    );
+
+    setChatHistory([
+      ...newChatHistory,
+      { role: "assistant", content: response.reply }
+    ]);
+
+  } catch (error) {
+    console.error("Error in AI chat:", error);
+
+    const status = error?.status;   // ✅ FIXED
+    const msg =
+    error?.data?.error ||
+    error?.message ||
+    "Something went wrong. Please try again.";
+
+    // ✅ HANDLE LIMIT ERRORS (IMPORTANT)
+    if (status === 429) {
       setChatHistory([
         ...newChatHistory,
-        { role: "assistant", content: response.reply }
+        {
+          role: "assistant",
+          content: `🚫 ${msg}`
+        }
       ]);
-    } catch (error) {
-      console.error("Error in AI chat:", error);
-      setChatHistory([
-        ...newChatHistory,
-        { role: "assistant", content: "Sorry, I encountered an error. Please try again." }
-      ]);
-    } finally {
-      setIsChatting(false);
+      return;
     }
-  };
 
+    // other errors
+    setChatHistory([
+      ...newChatHistory,
+      {
+        role: "assistant",
+        content: `❌ ${msg}`
+      }
+    ]);
+
+  } finally {
+    setIsChatting(false);
+  }
+};
   // =============== MOCK INTERVIEW FUNCTIONS ===============
   
   const handleStartMockInterview = async () => {
     if (!selectedJob) return;
     
     setIsStartingMockInterview(true);
+  //   if (mockInterviewProgress?.sessions_completed >= 3) {
+  //     setIsStartingMockInterview(false); // important reset
+  //     alert("🚫 Daily limit reached (3 interviews per day)");
+  //     return;
+  // }
     try {
       const userInput = {
         jobId: selectedJob.job_id,
@@ -220,13 +284,25 @@ function InterviewPreparation() {
         setMockInterviewResults(null);
         setShowMockInterviewSetup(false);
         setShowMockInterviewResults(false);
-        alert(`✅ Mock interview started! Answer all ${mockInterviewSettings.totalQuestions} questions.`);
+        toast.success(`✅ Mock interview started! Answer all ${mockInterviewSettings.totalQuestions} questions.`);
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (error) {
       console.error("Error starting mock interview:", error);
-      alert(`❌ Failed to start mock interview: ${error.message}`);
+
+      const status = error?.response?.status;
+      const msg =
+        error?.response?.data?.error ||
+        error?.message ||
+        "Something went wrong";
+
+      if (status === 429) {
+        toast.error("🚫 " + msg);
+        return;
+      }
+
+      toast.error(`❌ ${msg}`);
     } finally {
       setIsStartingMockInterview(false);
     }
@@ -241,7 +317,7 @@ function InterviewPreparation() {
 
   const handleSubmitMockInterview = async () => {
   if (!mockInterviewSession || Object.keys(userAnswers).length === 0) {
-    alert("Please answer at least one question before submitting.");
+    toast.error("Please answer at least one question before submitting.");
     return;
   }
   
@@ -303,7 +379,7 @@ function InterviewPreparation() {
       // Refresh progress data after submission
       await fetchMockInterviewProgress(mockInterviewSession.jobId);
       
-      alert("✅ Mock interview submitted! Check your results below.");
+      toast.success("✅ Mock interview submitted! Check your results below.");
       
     } else {
       // Try to fetch results separately
@@ -319,7 +395,7 @@ function InterviewPreparation() {
           // Refresh progress data after submission
           await fetchMockInterviewProgress(mockInterviewSession.jobId);
           
-          alert("✅ Mock interview submitted! Check your results below.");
+          toast.success("✅ Mock interview submitted! Check your results below.");
         } else {
           // Create a basic results structure
           const basicResults = {
@@ -340,7 +416,7 @@ function InterviewPreparation() {
           // Refresh progress data after submission
           await fetchMockInterviewProgress(mockInterviewSession.jobId);
           
-          alert("✅ Mock interview submitted! Check your results below.");
+          toast.success("✅ Mock interview submitted! Check your results below.");
         }
       } catch (fetchError) {
         console.error("Error fetching results:", fetchError);
@@ -364,29 +440,40 @@ function InterviewPreparation() {
         // Still refresh progress even if detailed results aren't available
         await fetchMockInterviewProgress(mockInterviewSession.jobId);
         
-        alert("✅ Answers submitted successfully! Check your progress tracking below.");
+        toast.success("✅ Answers submitted successfully! Check your progress tracking below.");
       }
     }
   } catch (error) {
     console.error("Error submitting mock interview:", error);
-    alert(`❌ Failed to submit mock interview: ${error.message}`);
+    toast.error(`❌ Failed to submit mock interview: ${error.message}`);
   } finally {
     setIsSubmittingMockInterview(false);
   }
 };
 
+  // const calculateMockInterviewScore = () => {
+  //   if (!mockInterviewResults) return 0;
+    
+  //   const results = getResultsData();
+    
+  //   if (results.length === 0) return 0;
+    
+  //   const scores = results.map(r => r.score || 0);
+  //   const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+  //   return Math.round(average * 10) / 10;
+  // };
   const calculateMockInterviewScore = () => {
     if (!mockInterviewResults) return 0;
-    
+
     const results = getResultsData();
-    
     if (results.length === 0) return 0;
-    
-    const scores = results.map(r => r.score || 0);
+
+    const scores = results.map(r => normalizeScore(r.score));
+
     const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+
     return Math.round(average * 10) / 10;
   };
-
   const getResultsData = () => {
     if (!mockInterviewResults) return [];
     
@@ -433,28 +520,55 @@ function InterviewPreparation() {
   };
 
   // Calculate average progress score (converted to 0-10 scale)
+  // const calculateAverageProgressScore = () => {
+  //   if (!mockInterviewProgress.progress || mockInterviewProgress.progress.length === 0) return 0;
+  //   const total = mockInterviewProgress.progress.reduce((sum, session) => sum + (session.score_percentage || 0), 0);
+  //   const averagePercentage = total / mockInterviewProgress.progress.length;
+  //   return Math.round((averagePercentage * 10) / 100 * 10) / 10; // Convert to 0-10 scale and round to 1 decimal
+  // };
   const calculateAverageProgressScore = () => {
-    if (!mockInterviewProgress.progress || mockInterviewProgress.progress.length === 0) return 0;
-    const total = mockInterviewProgress.progress.reduce((sum, session) => sum + (session.score_percentage || 0), 0);
-    const averagePercentage = total / mockInterviewProgress.progress.length;
-    return Math.round((averagePercentage * 10) / 100 * 10) / 10; // Convert to 0-10 scale and round to 1 decimal
-  };
+  if (!mockInterviewProgress?.progress?.length) return 0;
+
+  const scores = mockInterviewProgress.progress.map(
+    s => normalizeScore(s.score_percentage)
+  );
+
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+  return Math.round(avg * 10) / 10;
+};
 
   // Calculate highest score (converted to 0-10 scale)
+  // const calculateHighestScore = () => {
+  //   if (!mockInterviewProgress.progress || mockInterviewProgress.progress.length === 0) return 0;
+  //   const highestPercentage = Math.max(...mockInterviewProgress.progress.map(session => session.score_percentage || 0));
+  //   return Math.round((highestPercentage * 10) / 100 * 10) / 10; // Convert to 0-10 scale and round to 1 decimal
+  // };
   const calculateHighestScore = () => {
-    if (!mockInterviewProgress.progress || mockInterviewProgress.progress.length === 0) return 0;
-    const highestPercentage = Math.max(...mockInterviewProgress.progress.map(session => session.score_percentage || 0));
-    return Math.round((highestPercentage * 10) / 100 * 10) / 10; // Convert to 0-10 scale and round to 1 decimal
-  };
+  if (!mockInterviewProgress?.progress?.length) return 0;
+
+  const scores = mockInterviewProgress.progress.map(
+    s => normalizeScore(s.score_percentage)
+  );
+
+  return Math.round(Math.max(...scores) * 10) / 10;
+};
 
   // Calculate improvement percentage
   const calculateImprovementPercentage = () => {
-    if (!mockInterviewProgress.progress || mockInterviewProgress.progress.length < 2) return 0;
-    const firstScore = mockInterviewProgress.progress[0].score_percentage || 0;
-    const lastScore = mockInterviewProgress.progress[mockInterviewProgress.progress.length - 1].score_percentage || 0;
-    if (firstScore === 0) return 0;
-    return Math.round(((lastScore - firstScore) / firstScore) * 100);
-  };
+  if (!mockInterviewProgress?.progress?.length || mockInterviewProgress.progress.length < 2)
+    return 0;
+
+  const sorted = [...mockInterviewProgress.progress]
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  const firstScore = normalizeScore(sorted[0].score_percentage);
+  const lastScore = normalizeScore(sorted[sorted.length - 1].score_percentage);
+
+  if (firstScore === 0) return 0;
+
+  return Math.round(((lastScore - firstScore) / firstScore) * 100);
+};
 
   const getChatModeTitle = () => {
     switch (chatMode) {
@@ -626,7 +740,7 @@ function InterviewPreparation() {
       <div className="flex items-end h-32 gap-2 mb-2">
         {mockInterviewProgress.progress.map((session, index) => {
           // Convert score_percentage (0-100) to 0-10 scale for bar height
-          const normalizedScore = (session.score_percentage || 0) / 10; // Convert to 0-10 scale
+          const normalizedScore = normalizeScore(session.score_percentage); // Convert to 0-10 scale
           const barHeight = Math.max(10, normalizedScore * 10); // Multiply by 10 to get percentage height
           
           return (
@@ -669,7 +783,7 @@ function InterviewPreparation() {
         </div>
       ) : (
         mockInterviewProgress.progress.map((session, index) => {
-          const normalizedScore = (session.score_percentage || 0) / 10;
+          const normalizedScore = normalizeScore(session.score_percentage);
           
           return (
             <div 
@@ -687,7 +801,7 @@ function InterviewPreparation() {
                   {normalizedScore.toFixed(1)}/10
                 </span>
                 <div className="text-xs text-gray-500">
-                  ({session.score_percentage?.toFixed(1) || '0.0'}%)
+                  ({normalizeScore(session.score_percentage).toFixed(1)}%)
                 </div>
               </div>
             </div>

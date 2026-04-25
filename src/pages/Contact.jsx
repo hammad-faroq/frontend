@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import ReactLogo from "../assets/react-logo.svg"; // ensure this path is correct
+import toast from "react-hot-toast";
 import { BriefcaseIcon, ChartBarIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
 export default function Contact() {
@@ -11,7 +12,7 @@ export default function Contact() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert(
+    toast.success(
       `Message sent!\n\nName: ${form.name}\nEmail: ${form.email}\nMessage: ${form.message}`
     );
     setForm({ name: "", email: "", message: "" });
@@ -19,34 +20,6 @@ export default function Contact() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 relative overflow-hidden">
-      {/* ---------- Header ---------- */}
-      <header className="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md shadow-sm z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 h-16">
-          <h1 className="text-2xl font-extrabold text-indigo-600 tracking-tight">
-            TalentMatch AI
-          </h1>
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-indigo-600">
-              Home
-            </Link>
-            <Link to="/about" className="text-gray-700 hover:text-indigo-600">
-              About
-            </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-indigo-600">
-              Contact
-            </Link>
-            <Link to="/login" className="text-gray-700 hover:text-indigo-600">
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition"
-            >
-              Get Started
-            </Link>
-          </nav>
-        </div>
-      </header>
 
       {/* ---------- Animated Background + Form ---------- */}
       <main className="relative z-10 flex-1 flex items-center justify-center px-6 py-16 pt-28">

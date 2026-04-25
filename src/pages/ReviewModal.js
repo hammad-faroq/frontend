@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { reviewCandidateAnswers, finalizeInterview } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 function ReviewModal({ interviewId, onClose, onFinalize }) {
   const [candidateAnswers, setCandidateAnswers] = useState([]);
@@ -12,7 +13,7 @@ function ReviewModal({ interviewId, onClose, onFinalize }) {
         setCandidateAnswers(Array.isArray(answers) ? answers : []);
       } catch (err) {
         console.error("Review interview error:", err);
-        alert("Failed to load candidate answers.");
+        toast.error("Failed to load candidate answers.");
       } finally {
         setLoading(false);
       }
@@ -28,11 +29,11 @@ function ReviewModal({ interviewId, onClose, onFinalize }) {
 
     try {
       await finalizeInterview(interviewId);
-      alert("Interview finalized successfully!");
+      toast.success("Interview finalized successfully!");
       onFinalize();
     } catch (err) {
       console.error("Finalize interview error:", err);
-      alert("Failed to finalize interview.");
+      toast.error("Failed to finalize interview.");
     }
   };
 

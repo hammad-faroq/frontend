@@ -2,7 +2,8 @@
 import  { useState, useEffect } from "react";
 import { getUserProfile, logoutUser } from "../services/api";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
+import toast from "react-hot-toast";
+import API from "../services/api";
 
 function JobSeekerProfile() {
   const [profile, setProfile] = useState(null);
@@ -64,7 +65,7 @@ function JobSeekerProfile() {
   const handleSave = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backendfyp-production-00a3.up.railway.app/accounts/profile/", {
+      const response = await fetch(`${API.BASE_URL}/accounts/profile/`, {
         method: "PUT",
         headers: {
           "Authorization": `Token ${token}`,
@@ -77,21 +78,21 @@ function JobSeekerProfile() {
         const updatedProfile = await response.json();
         setProfile(updatedProfile);
         setEditing(false);
-        alert("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
       } else {
         const errorData = await response.json();
-        alert(`Failed to update profile: ${errorData.error || "Please try again."}`);
+        toast.error(`Failed to update profile: ${errorData.error || "Please try again."}`);
       }
     } catch (err) {
       console.error("Error updating profile:", err);
-      alert("Failed to update profile. Please try again.");
+      toast.error("Failed to update profile. Please try again.");
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -105,7 +106,7 @@ function JobSeekerProfile() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">

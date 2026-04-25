@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import JobPostingForm from './JobPostingForm';
+import API from "../services/api";
 
 const JobListComponent = () => {
   const [jobs, setJobs] = useState([]);
@@ -13,7 +14,7 @@ const JobListComponent = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   // API Base URL
-  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+  const API_BASE_URL = API.JOBS;
 
   // Simple API service methods
   const apiCall = async (url, options = {}) => {

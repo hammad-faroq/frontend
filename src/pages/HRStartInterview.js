@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { startInterview } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 function HRStartInterview() {
   const { interviewId } = useParams();
@@ -17,7 +18,7 @@ function HRStartInterview() {
     try {
       // This API should change interview status to 'in_progress'
       await startInterview(interviewId);
-      alert("Interview started successfully! Candidate can now begin.");
+      toast.success("Interview started successfully! Candidate can now begin.");
       navigate(`/hr/dashboard`);
     } catch (err) {
       console.error("Error starting interview:", err);

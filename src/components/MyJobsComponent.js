@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import JobPostingForm from './JobPostingForm';
 import { getCurrentUser, getAuthHeaders } from '../utils/userHelper';
+import API from "../services/api";
 
 const MyJobsComponent = () => {
   const [jobs, setJobs] = useState([]);
@@ -14,7 +15,7 @@ const MyJobsComponent = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const navigate = useNavigate();
 
-  const API_BASE_URL = 'https://backendfyp-production-00a3.up.railway.app/api/jobs';
+  const API_BASE_URL = API.JOBS;
 
   const currentUser = getCurrentUser();
 

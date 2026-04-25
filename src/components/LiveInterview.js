@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { interviewApi } from '../services/interviewApi';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from "react-hot-toast";
 
 function LiveInterview() {
   const { id } = useParams();
@@ -51,7 +52,7 @@ function LiveInterview() {
             await interviewApi.startInterview(id);
             fetchInterviewData(); // Refresh data
           } catch (err) {
-            alert('Failed to start interview: ' + err.message);
+            toast.error('Failed to start interview: ' + err.message);
             navigate('/interviews');
           }
         } else {
@@ -60,7 +61,7 @@ function LiveInterview() {
       }
     } catch (err) {
       console.error('Error fetching interview data:', err);
-      alert('Failed to load interview. Please try again.');
+      toast.error('Failed to load interview. Please try again.');
       navigate('/interviews');
     }
   };
@@ -82,7 +83,7 @@ function LiveInterview() {
   };
 
   const handleTimeUp = () => {
-    alert('Time is up! Moving to next question.');
+    toast.success('Time is up! Moving to next question.');
     handleNextQuestion();
   };
 
@@ -108,14 +109,14 @@ function LiveInterview() {
         const blob = new Blob(chunks, { type: 'video/webm' });
         // In production, you would upload this blob to your server
         console.log('Video recorded:', blob);
-        alert('Video recorded successfully! Submit your answer.');
+        toast.success('Video recorded successfully! Submit your answer.');
       };
 
       mediaRecorderRef.current.start();
       setRecording(true);
     } catch (err) {
       console.error('Error accessing media devices:', err);
-      alert('Could not access camera/microphone. Please check permissions.');
+      toast.error('Could not access camera/microphone. Please check permissions.');
     }
   };
 
@@ -133,7 +134,7 @@ function LiveInterview() {
 
   const handleSubmitAnswer = async () => {
     if (!answer.trim() && !recording) {
-      alert('Please provide an answer or record a video response.');
+      toast.error('Please provide an answer or record a video response.');
       return;
     }
 
@@ -166,7 +167,7 @@ function LiveInterview() {
       }
     } catch (err) {
       console.error('Error submitting answer:', err);
-      alert('Failed to submit answer. Please try again.');
+      toast.error('Failed to submit answer. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -188,7 +189,7 @@ function LiveInterview() {
     try {
       await interviewApi.completeInterview(id);
       setInterviewCompleted(true);
-      alert('Interview completed successfully!');
+      toast.success('Interview completed successfully!');
       
       // Redirect to feedback after 2 seconds
       setTimeout(() => {
@@ -196,7 +197,7 @@ function LiveInterview() {
       }, 2000);
     } catch (err) {
       console.error('Error completing interview:', err);
-      alert('Failed to complete interview. Please try again.');
+      toast.error('Failed to complete interview. Please try again.');
     }
   };
 

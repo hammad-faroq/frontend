@@ -1,6 +1,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { finalizeInterview } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 const FinalizeInterview = () => {
   const { interviewId } = useParams();
@@ -9,7 +10,7 @@ const FinalizeInterview = () => {
   const handleFinalize = async () => {
     try {
       await finalizeInterview(interviewId);
-      alert("Interview finalized!");
+      toast.success("Interview finalized!");
       navigate("/hr/dashboard");
     } catch (err) {
       console.error("Failed to finalize interview:", err);

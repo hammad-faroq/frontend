@@ -1,10 +1,27 @@
 import axios from "axios";
-// ---------------- Base URLs ----------------
-const BASE_URL = "https://backendfyp-production-00a3.up.railway.app/accounts";
-const BASE_API_URL = "https://backendfyp-production-00a3.up.railway.app/api";
-const BASE_JOBS_URL = `${BASE_API_URL}/jobs`;
-const BASE_CV_URL = "https://backendfyp-production-00a3.up.railway.app/cv_manager"
-const BASE_INTERVIEW_URL = "https://backendfyp-production-00a3.up.railway.app/api/interview";
+const IS_PRODUCTION = false;
+
+const BASE_URL = IS_PRODUCTION
+  ? "https://backendfyp-production-00a3.up.railway.app"
+  : "http://127.0.0.1:8000";
+
+const BASE_API_URL = `${BASE_URL}`;
+
+// ---------------- SINGLE API OBJECT ----------------
+const API = {
+  BASE_URL,
+  BASE_API_URL,
+
+  AUTH: `${BASE_URL}`,
+  JOBS: `${BASE_URL}/jobs`,
+  CV: `${BASE_URL}/cv_manager`,
+  INTERVIEW: `${BASE_URL}/interview`,
+  BASE_JOBS_URL: `${BASE_URL}/jobs`,
+  BASE_CV_URL: `${BASE_URL}/cv_manager`,
+  BASE_INTERVIEW_URL: `${BASE_URL}/interview`
+};
+
+export default API;
 
 /* ---------------- Utility: Auth Helpers ---------------- */
 const getAuthHeaders = () => {
@@ -20,7 +37,7 @@ const handleUnauthorized = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user_role");
   localStorage.removeItem("is_superuser");
-  window.location.href = "/login"; // redirect to login
+  // window.location.href = "/login"; // redirect to login
 };
 
 // 🔐 Require auth before accessing secure pages
@@ -35,7 +52,7 @@ export const requireAuth = () => {
 
 export const loginUser = async (email, password) => {
   try {
-    const response = await fetch(`${BASE_URL}/login/`, {
+    const response = await fetch(`${BASE_API_URL}/accounts/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -60,7 +77,7 @@ export const loginUser = async (email, password) => {
 
 export const registerUser = async (userData) => {
   try {
-    const response = await fetch(`${BASE_URL}/register/`, {
+    const response = await fetch(`${BASE_URL}/accounts/register/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(userData),
@@ -75,7 +92,7 @@ export const registerUser = async (userData) => {
 
 export const checkAccountStatus = async (email) => {
   try {
-    const response = await fetch(`${BASE_URL}/account-status/`, {
+    const response = await fetch(`${BASE_URL}/accounts/account-status/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -91,7 +108,7 @@ export const checkAccountStatus = async (email) => {
 // ✅ Dashboard protected endpoint
 export const getDashboard = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/dashboard/`, {
+    const response = await fetch(`${BASE_URL}/accounts/dashboard/`, {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -108,28 +125,33 @@ export const getDashboard = async () => {
 
 // ✅ Logout API
 export const logoutUser = async () => {
+  const token = localStorage.getItem("token");
+
   try {
-    const token = localStorage.getItem("token");
-    if (!token) return { message: "Already logged out" };
+    if (token) {
+      await fetch(`${BASE_URL}/accounts/logout/`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+    }
 
-    const response = await fetch(`${BASE_URL}/logout/`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("is_superuser");
 
-    const data = await response.json();
-    handleUnauthorized(); // Clear + redirect
-    return { ...data, status: response.status, ok: response.ok };
+    return { success: true };
   } catch (error) {
-    console.error("Logout API error:", error);
-    handleUnauthorized();
-    throw error;
+    localStorage.removeItem("token");
+    localStorage.removeItem("user_role");
+    localStorage.removeItem("is_superuser");
+
+    return { success: false };
   }
 };
 
 export const requestPasswordReset = async (email) => {
   try {
-    const response = await fetch(`${BASE_URL}/password-reset/`, {
+    const response = await fetch(`${BASE_URL}/accounts/password-reset/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -189,7 +211,7 @@ export const getUserProfile = async () => {
 
 export const listJobs = async () => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/list/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/list/`, {
       headers: getAuthHeaders(),
     });
     if (response.status === 401) handleUnauthorized();
@@ -203,7 +225,7 @@ export const listJobs = async () => {
 
 export const createJob = async (jobData) => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/create/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/create/`, {
       method: "POST",
       headers: getAuthHeaders(),
       body: JSON.stringify(jobData),
@@ -219,7 +241,7 @@ export const createJob = async (jobData) => {
 
 export const getJobDetail = async (jobId) => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/${jobId}/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/${jobId}/`, {
       headers: getAuthHeaders(),
     });
     if (response.status === 401) handleUnauthorized();
@@ -233,7 +255,7 @@ export const getJobDetail = async (jobId) => {
 
 export const updateJob = async (jobId, jobData) => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/update/${jobId}/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/update/${jobId}/`, {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(jobData),
@@ -249,7 +271,7 @@ export const updateJob = async (jobId, jobData) => {
 
 export const deleteJob = async (jobId) => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/delete/${jobId}/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/delete/${jobId}/`, {
       method: "DELETE",
       headers: getAuthHeaders(),
     });
@@ -269,7 +291,7 @@ export const applyToJob = async (jobId, resumeFile) => {
     formData.append("resume", resumeFile);
     const token = localStorage.getItem("token");
 
-    const response = await fetch(`${BASE_JOBS_URL}/${jobId}/apply/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/${jobId}/apply/`, {
       method: "POST",
       headers: { Authorization: token ? `Token ${token}` : "" },
       body: formData,
@@ -291,7 +313,7 @@ export const applyToJob = async (jobId, resumeFile) => {
 
 export const getAppliedJobs = async () => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/applied/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/applied/`, {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -308,7 +330,7 @@ export const getAppliedJobs = async () => {
 // Fetch all jobs created by the current HR
 export const getHRJobs = async () => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/list/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/list/`, {
       headers: getAuthHeaders(),
     });
     if (response.status === 401) handleUnauthorized();
@@ -323,7 +345,7 @@ export const getHRJobs = async () => {
 // Fetch all applications for a specific job (HR only)
 export const getJobApplications = async (jobId) => {
   try {
-    const response = await fetch(`${BASE_JOBS_URL}/${jobId}/applications/`, {
+    const response = await fetch(`${API.BASE_JOBS_URL}/${jobId}/applications/`, {
       headers: getAuthHeaders(),
     });
     if (response.status === 401) handleUnauthorized();
@@ -339,7 +361,7 @@ export const getSimilarJobs = async (params = {}) => {
   const token = localStorage.getItem("token");
   try {
     const query = new URLSearchParams(params).toString();
-    const res = await fetch(`${BASE_CV_URL}/similar-jobs/?${query}`, {
+    const res = await fetch(`${API.BASE_CV_URL}/similar-jobs/?${query}`, {
       method: "GET",
       headers: {
         Authorization: `Token ${token}`,
@@ -363,7 +385,7 @@ export const getSimilarJobs = async (params = {}) => {
 /* ---------------- Application Status ---------------- */
 export const checkApplicationStatus = async (jobId) => {
   try {
-    const response = await fetch(`${BASE_CV_URL}/check-application-status/${jobId}/`, {
+    const response = await fetch(`${API.BASE_CV_URL}/check-application-status/${jobId}/`, {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -407,7 +429,7 @@ export const getResumeAnalysis = async () => {
   if (!token) throw new Error("User not logged in");
   
   try {
-    const res = await axios.get(`${BASE_CV_URL}/resume-analysis/`, {
+    const res = await axios.get(`${API.BASE_CV_URL}/resume-analysis/`, {
       headers: { Authorization: `Token ${token}` },
     });
     return res.data;
@@ -427,7 +449,7 @@ export const getResumeAnalysis = async () => {
 export const getInterviewPreparation = async () => {
   try {
     const response = await fetch(
-      `${BASE_INTERVIEW_URL}/candidate/interview-preparation/`,
+      `${API.BASE_INTERVIEW_URL}/candidate/interview-preparation/`,
       {
         method: "GET",
         headers: getAuthHeaders(),
@@ -443,14 +465,10 @@ export const getInterviewPreparation = async () => {
     return { count: 0, data: [] };
   }
 };
-
-/* =========================================
-   2️⃣ Generate More Questions (POST)
-========================================= */
 export const generateMoreQuestions = async (jobId) => {
   try {
     const response = await fetch(
-      `${BASE_INTERVIEW_URL}/candidate/interview-preparation/generate-more/`,
+      `${API.BASE_INTERVIEW_URL}/candidate/interview-preparation/generate-more/`,
       {
         method: "POST",
         headers: getAuthHeaders(),
@@ -459,53 +477,45 @@ export const generateMoreQuestions = async (jobId) => {
     );
 
     if (response.status === 401) handleUnauthorized();
-    if (!response.ok) throw new Error("Failed to generate more questions.");
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+      // IMPORTANT: throw backend message
+      throw { response: { data } };
+    }
+
+    return data;
   } catch (error) {
-    console.error("Error generating more questions:", error);
-    return null;
+    throw error; // IMPORTANT: don't swallow it
   }
 };
-
-/* =========================================
-   3️⃣ Mock Interview Chat (POST)
-========================================= */
 export const sendMockInterviewMessage = async (jobId, message) => {
-  try {
-    const response = await fetch(
-      `${BASE_INTERVIEW_URL}/candidate/interview-chat/`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ job_id: jobId, message }),
-      }
-    );
+  const response = await fetch(
+    `${API.BASE_INTERVIEW_URL}/candidate/interview-chat/`,
+    {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ job_id: jobId, message }),
+    }
+  );
 
-    if (response.status === 401) handleUnauthorized();
-    if (!response.ok) throw new Error("Failed to send mock interview message.");
+  const data = await response.json();
 
-    return await response.json(); // { reply: "..." }
-  } catch (error) {
-    console.error("Error sending mock interview message:", error);
-    return { reply: "Error generating reply" };
+  if (!response.ok) {
+    // 🚨 attach full error info
+    const error = new Error(data?.error || "Request failed");
+    error.status = response.status;
+    error.data = data;
+    throw error;
   }
+
+  return data;
 };
-
-/* =========================================
-   Mock Interview Session (Dynamic Inputs)
-========================================= */
-
-// Start a new mock interview session
 export const startMockInterview = async (userInput) => {
-  /**
-   * userInput = {
-   *   jobId: number,
-   *   difficulty: string,         // e.g., "easy", "medium", "hard"
-   *   interviewType: string,      // e.g., "technical", "HR", "behavioral"
-   *   totalQuestions: number      // number of questions user wants
-   * }
-   */
   try {
     const payload = {
       job_id: userInput.jobId,
@@ -514,34 +524,30 @@ export const startMockInterview = async (userInput) => {
       total_questions: userInput.totalQuestions,
     };
 
-    const response = await fetch(`${BASE_INTERVIEW_URL}/candidate/mock-interview/`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `${API.BASE_INTERVIEW_URL}/candidate/mock-interview/`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await response.json(); // 🔥 ALWAYS READ JSON FIRST
 
     if (response.status === 401) handleUnauthorized();
-    if (!response.ok) throw new Error("Failed to start mock interview.");
 
-    return await response.json(); // { session_id, questions: [...] }
+    if (!response.ok) {
+      // 🔥 THROW BACKEND MESSAGE
+      throw { response: { data } };
+    }
+
+    return data;
   } catch (err) {
-    console.error("startMockInterview error:", err);
-    return null;
+    throw err;
   }
 };
-
-// Submit answers for an existing session
 export const submitMockInterviewAnswers = async (userInput) => {
-  /**
-   * userInput = {
-   *   jobId: number,
-   *   sessionId: number,
-   *   answers: [                 // array of answers
-   *     { question_index: number, answer: string },
-   *     ...
-   *   ]
-   * }
-   */
   try {
     const payload = {
       job_id: userInput.jobId,
@@ -549,19 +555,26 @@ export const submitMockInterviewAnswers = async (userInput) => {
       answers: userInput.answers,
     };
 
-    const response = await fetch(`${BASE_INTERVIEW_URL}/candidate/mock-interview/`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
+    const response = await fetch(
+      `${API.BASE_INTERVIEW_URL}/candidate/mock-interview/`,
+      {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await response.json();
 
     if (response.status === 401) handleUnauthorized();
-    if (!response.ok) throw new Error("Failed to submit mock interview answers.");
 
-    return await response.json(); // { completed: true, results: [...] }
+    if (!response.ok) {
+      throw { response: { data } };
+    }
+
+    return data;
   } catch (err) {
-    console.error("submitMockInterviewAnswers error:", err);
-    return null;
+    throw err;
   }
 };
 
@@ -569,7 +582,7 @@ export const submitMockInterviewAnswers = async (userInput) => {
 export const getMockInterviewResults = async (sessionId) => {
   try {
     const response = await fetch(
-      `${BASE_INTERVIEW_URL}/candidate/mock-interview-results/${sessionId}/`,
+      `${API.BASE_INTERVIEW_URL}/candidate/mock-interview-results/${sessionId}/`,
       {
         method: "GET",
         headers: getAuthHeaders(),
@@ -594,7 +607,7 @@ export const getMockInterviewProgress = async (jobId) => {
   }
 
   const res = await fetch(
-    `${BASE_INTERVIEW_URL}/progress/${jobId}/`,
+    `${API.BASE_INTERVIEW_URL}/progress/${jobId}/`,
     {
       method: "GET",
       headers: {

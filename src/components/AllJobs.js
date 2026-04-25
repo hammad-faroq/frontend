@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { listJobs, deleteJob } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function AllJobs({ user }) {
   const [jobs, setJobs] = useState([]);
@@ -41,7 +42,7 @@ function AllJobs({ user }) {
         fetchJobs();
       } catch (err) {
         console.error(err);
-        alert("Failed to delete job.");
+        toast.error("Failed to delete job.");
       }
     }
   };

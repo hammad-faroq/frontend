@@ -9,12 +9,11 @@ import JobSeekerDashboard from "./JobSeekerDashboard";
 import AdminDashboard from "./AdminDashboard";
 
 // Reusable Components
-import Sidebar from "../components/Sidebar";
-import Header from "./Header";
+// import Header from "./Header";
 import Loader from "./Loader";
 import ErrorMessage from "./ErrorMessage";
-import GlobalHeader from "./GlobalHeader";
-import GlobalFooter from "./GlobalFooter";
+// import GlobalHeader from "./GlobalHeader";
+// import GlobalFooter from "./GlobalFooter";
 
 function Dashboard() {
   const [userInfo, setUserInfo] = useState(null);
@@ -85,15 +84,15 @@ function Dashboard() {
   return (
 
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <GlobalHeader handleLogout={handleLogout} />
+      {/* <GlobalHeader handleLogout={handleLogout} /> */}
       <div className="flex flex-grow">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <main className="flex-1 p-6">
-          <Header userInfo={userInfo} />
+          {/* <Header userInfo={userInfo} /> */}
           {renderRoleDashboard()}
         </main>
       </div>
-      <GlobalFooter />
+      {/* <GlobalFooter /> */}
 
     </div>
   );

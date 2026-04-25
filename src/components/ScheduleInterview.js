@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { interviewApi } from '../services/interviewApi';
 import { useNavigate } from 'react-router-dom';
+import toast from "react-hot-toast";
 
 function ScheduleInterview() {
   const [formData, setFormData] = useState({
@@ -67,12 +68,12 @@ function ScheduleInterview() {
     
     // Validation
     if (!formData.candidate || !formData.job || !formData.scheduled_date) {
-      alert('Please fill in all required fields.');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
     if (new Date(formData.scheduled_date) < new Date()) {
-      alert('Interview must be scheduled for a future time.');
+      toast.error('Interview must be scheduled for a future time.');
       return;
     }
 
@@ -85,14 +86,14 @@ function ScheduleInterview() {
       };
 
       const result = await interviewApi.scheduleInterview(interviewData);
-      alert('Interview scheduled successfully!');
+      toast.success('Interview scheduled successfully!');
       navigate('/interviews');
     } catch (err) {
       console.error('Error scheduling interview:', err);
       const errorMsg = err.response?.data?.error || 
                       err.response?.data?.detail || 
                       'Failed to schedule interview. Please try again.';
-      alert(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

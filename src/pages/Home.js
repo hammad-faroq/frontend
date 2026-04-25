@@ -36,22 +36,22 @@ function Home() {
   }, []);
 
   const handleGetStarted = () => {
-    if (role === "job_seeker") {
-      navigate("/dashboard");
-    } else if (role === "hr") {
-      navigate("/dashboard");
-    } else {
-      navigate("/register");
-    }
+    // if (role === "job_seeker") {
+    //   navigate("/dashboard");
+    // } else if (role === "hr") {
+    //   navigate("/dashboard");
+    // } else {
+      navigate("/login");
+    // }
   };
 
   const handleEmployerLogin = () => {
-    if (role === "hr") {
-      navigate("/dashboard");
-    } else {
-      navigate("/login", { state: { role: "employer" } });
-    }
-  };
+  if (isAuthenticated() && role === "hr") {
+    navigate("/dashboard");
+  } else {
+    navigate("/login", { state: { role: "employer" } });
+  }
+};
 
   const handleLearnMore = (feature) => {
     setSelectedFeature(feature);
@@ -64,7 +64,16 @@ function Home() {
     setSelectedFeature(null);
     document.body.style.overflow = 'auto';
   };
-
+  const isAuthenticated = () => {
+    return !!localStorage.getItem("token");
+  };
+  const goToDashboard = () => {
+  // if (isAuthenticated()) {
+    navigate("/dashboard");
+  // } else {
+  //   navigate("/login");
+  // }
+};
   const features = [
     {
       icon: <SparklesIcon className="w-10 h-10" />,
@@ -282,83 +291,6 @@ function Home() {
       {/* Feature Modal */}
       {showModal && <FeatureModal />}
 
-      {/* Header */}
-      <header className={`fixed top-0 left-0 w-full z-40 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-white/90 backdrop-blur-md shadow-lg py-2' 
-          : 'bg-transparent py-4'
-      }`}>
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6">
-          {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 hover:opacity-90 transition-opacity">
-            {/* Logo Image from Django media folder */}
-            <img 
-              src="/media/logo/TalentMatch_ai%20logo.png"  // URL encoded space
-              alt="TalentMatch AI Logo" 
-              className="h-8 w-auto" 
-              onError={(e) => {
-                e.target.onerror = null; // Prevent infinite loop
-                // Fallback to gradient logo if image doesn't exist
-                e.target.style.display = 'none';
-                const fallbackDiv = e.target.nextElementSibling;
-                if (fallbackDiv) fallbackDiv.style.display = 'flex';
-              }}
-            />
-            {/* Fallback gradient logo - hidden by default, shown only if image fails */}
-            <div 
-              className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hidden items-center justify-center"
-              style={{ display: 'none' }}
-            >
-              <BriefcaseIcon className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
-              TalentMatch AI
-            </h1>
-          </Link>
-
-          {/* Navigation */}
-          <nav className="hidden lg:flex items-center space-x-6">
-            <a href="#features" className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm">
-              Features
-            </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm">
-              How It Works
-            </a>
-            <a href="#testimonials" className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm">
-              Success Stories
-            </a>
-            <Link to="/about" className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm">
-              About
-            </Link>
-            {role ? (
-              <button
-                onClick={() => navigate("/dashboard")}
-                className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm"
-              >
-                Dashboard
-              </button>
-            ) : (
-              <Link to="/login" className="text-gray-700 hover:text-indigo-600 font-medium transition text-sm">
-                Sign In
-              </Link>
-            )}
-            <button
-              onClick={handleGetStarted}
-              className="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-indigo-200 transition-all flex items-center gap-1.5 text-sm"
-            >
-              Get Started
-              <ArrowRightIcon className="w-3 h-3" />
-            </button>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <button className="lg:hidden p-1.5 rounded-md bg-gray-100">
-            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7"></path>
-            </svg>
-          </button>
-        </div>
-      </header>
 
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 overflow-hidden">
@@ -384,7 +316,7 @@ function Home() {
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={handleGetStarted}
+                onClick={() => navigate("/register")}
                 className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 text-sm"
               >
                 Start Free Trial
@@ -566,7 +498,7 @@ function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={handleGetStarted}
+                onClick={() => navigate("/login")}
                 className="px-6 py-3 bg-white text-indigo-600 font-bold rounded-lg hover:bg-gray-100 transition-all duration-300 hover:scale-105 shadow-md text-sm"
               >
                 Start Free Trial
@@ -584,67 +516,6 @@ function Home() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-6 mb-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
-                  <BriefcaseIcon className="w-4 h-4" />
-                </div>
-                <h3 className="text-xl font-bold">TalentMatch AI</h3>
-              </div>
-              <p className="text-gray-400 text-sm">
-                Transforming hiring with artificial intelligence and smart matching.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="text-base font-semibold mb-3">Product</h4>
-              <ul className="space-y-1.5 text-gray-400 text-sm">
-                <li><a href="#features" className="hover:text-white transition">Features</a></li>
-                <li><a href="#how-it-works" className="hover:text-white transition">How It Works</a></li>
-                <li><a href="#pricing" className="hover:text-white transition">Pricing</a></li>
-                <li><Link to="/demo" className="hover:text-white transition">Demo</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-base font-semibold mb-3">Company</h4>
-              <ul className="space-y-1.5 text-gray-400 text-sm">
-                <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
-                <li><Link to="/careers" className="hover:text-white transition">Careers</Link></li>
-                <li><Link to="/blog" className="hover:text-white transition">Blog</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-base font-semibold mb-3">Legal</h4>
-              <ul className="space-y-1.5 text-gray-400 text-sm">
-                <li><Link to="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
-                <li><Link to="/terms" className="hover:text-white transition">Terms of Service</Link></li>
-                <li><Link to="/cookies" className="hover:text-white transition">Cookie Policy</Link></li>
-                <li><Link to="/security" className="hover:text-white transition">Security</Link></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-xs mb-3 md:mb-0">
-              © {new Date().getFullYear()} TalentMatch AI. All rights reserved.
-            </p>
-            <div className="flex space-x-4 text-sm">
-              <a href="#" className="text-gray-400 hover:text-white transition">Twitter</a>
-              <a href="#" className="text-gray-400 hover:text-white transition">LinkedIn</a>
-              <a href="#" className="text-gray-400 hover:text-white transition">GitHub</a>
-              <a href="#" className="text-gray-400 hover:text-white transition">YouTube</a>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

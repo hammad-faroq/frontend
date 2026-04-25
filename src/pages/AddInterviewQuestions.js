@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { 
   getInterviewQuestions, 
   assignQuestionsToInterview,
@@ -96,7 +97,7 @@ function AddInterviewQuestions() {
 
   const handleAssignQuestions = async () => {
     if (selectedQuestions.length === 0) {
-      alert("Please select at least one question to assign.");
+      toast.error("Please select at least one question to assign.");
       return;
     }
 

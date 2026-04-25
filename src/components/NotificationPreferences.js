@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API from "../services/api";
+import toast from "react-hot-toast";
 
 const NotificationPreferences = () => {
   const [preferences, setPreferences] = useState({
@@ -28,7 +30,7 @@ const NotificationPreferences = () => {
   const fetchPreferences = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://backendfyp-production-00a3.up.railway.app/api/notifications/preferences/my_preferences/', {
+      const response = await axios.get(`${API.BASE_API_URL}/notifications/preferences/my_preferences/`, {
         headers: {
           Authorization: `Token ${token}`,
         },
@@ -59,7 +61,7 @@ const NotificationPreferences = () => {
       setMessage(null);
       
       const token = localStorage.getItem('token');
-      await axios.put('https://backendfyp-production-00a3.up.railway.app/api/notifications/preferences/my_preferences/', preferences, {
+      await axios.put(`${API.BASE_API_URL}/notifications/preferences/my_preferences/`, preferences, {
         headers: {
           Authorization: `Token ${token}`,
         },

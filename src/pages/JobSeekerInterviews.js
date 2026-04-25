@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import { logoutUser } from "../services/api";
 import { manageCandidateInterviewFlow } from "../services/interviewApi";
+import API from "../services/api";
+import toast from "react-hot-toast";
 
 function JobSeekerInterviews() {
   const [interviews, setInterviews] = useState([]);
@@ -36,7 +38,7 @@ function JobSeekerInterviews() {
         return;
       }
 
-      const response = await fetch("https://backendfyp-production-00a3.up.railway.app/api/interview/candidate/upcoming-interviews/", {
+      const response = await fetch(`${API.BASE_API_URL}/interview/candidate/upcoming-interviews/`, {
         headers: { 
           "Authorization": `Token ${token}`,
           "Content-Type": "application/json"
@@ -72,7 +74,7 @@ function JobSeekerInterviews() {
       
     } catch (err) {
       console.error("Error resuming interview:", err);
-      alert(`Failed to resume interview: ${err.message || 'Please try again.'}`);
+      toast.error(`Failed to resume interview: ${err.message || 'Please try again.'}`);
     } finally {
       setResuming(false);
     }
@@ -92,7 +94,7 @@ function JobSeekerInterviews() {
       
     } catch (err) {
       console.error("Error starting interview:", err);
-      alert(`Failed to start interview: ${err.message || 'Please try again.'}`);
+      toast.error(`Failed to start interview: ${err.message || 'Please try again.'}`);
     } finally {
       setResuming(false);
     }
@@ -230,7 +232,7 @@ function JobSeekerInterviews() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
@@ -244,7 +246,7 @@ function JobSeekerInterviews() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import API from "../services/api";
 
 function ResumeUploadPage() {
   const [resumeUrl, setResumeUrl] = useState(null);
@@ -12,7 +13,7 @@ function ResumeUploadPage() {
   const fetchResume = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
+      const res = await fetch(`${API.BASE_API_URL}/jobs/resume/`, {
         headers: { Authorization: `Token ${token}` },
       });
       const data = await res.json();
@@ -23,13 +24,13 @@ function ResumeUploadPage() {
   };
 
   const handleUpload = async () => {
-    if (!file) return alert("Please choose a file.");
+    if (!file) return toast.error("Please choose a file.");
     const token = localStorage.getItem("token");
     const formData = new FormData();
     formData.append("resume", file);
 
     try {
-      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
+      const res = await fetch(`${API.BASE_API_URL}/jobs/resume/`, {
         method: "POST",
         headers: { Authorization: `Token ${token}` },
         body: formData,
@@ -49,7 +50,7 @@ function ResumeUploadPage() {
   const handleDelete = async () => {
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("https://backendfyp-production-00a3.up.railway.app/api/jobs/resume/", {
+      const res = await fetch(`${API.BASE_API_URL}/jobs/resume/`, {
         method: "DELETE",
         headers: { Authorization: `Token ${token}` },
       });

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
+import toast from "react-hot-toast";
 import InterviewService from '../services/interviewService';
 import { getInterviewResult, getCandidateInterviewDetail } from '../services/interviewApi';
 
@@ -87,7 +87,7 @@ const CandidateInterviewResult = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8">
           <div className="max-w-6xl mx-auto">
             <div className="text-center py-12">
@@ -103,7 +103,7 @@ const CandidateInterviewResult = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        <Sidebar handleLogout={handleLogout} navigate={navigate} />
+        {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
         <div className="flex-1 p-8">
           <div className="max-w-4xl mx-auto">
             <div className="bg-red-50 border border-red-200 rounded-xl p-6">
@@ -124,7 +124,7 @@ const CandidateInterviewResult = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar handleLogout={handleLogout} navigate={navigate} />
+      {/* <Sidebar handleLogout={handleLogout} navigate={navigate} /> */}
       
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
@@ -402,7 +402,7 @@ const CandidateInterviewResult = () => {
                   If you have questions about your results or need clarification, contact the recruiter.
                 </p>
                 <button
-                  onClick={() => alert(`Contact: ${interview?.hr_email || 'recruiter@company.com'}`)}
+                  onClick={() => toast.success(`Contact: ${interview?.hr_email || 'recruiter@company.com'}`)}
                   className="w-full py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Contact Recruiter

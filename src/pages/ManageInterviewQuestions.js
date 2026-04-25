@@ -1,6 +1,6 @@
 import  { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-
+import toast from "react-hot-toast";
 function ManageInterviewQuestions() {
   const { interviewId } = useParams();
   const navigate = useNavigate();
@@ -255,7 +255,7 @@ function ManageInterviewQuestions() {
                     Cancel
                   </button>
                   <button
-                    onClick={() => alert("Questions saved successfully!")}
+                    onClick={() => toast.success("Questions saved successfully!")}
                     className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition"
                   >
                     Save Changes

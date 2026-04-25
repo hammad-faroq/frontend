@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import API from "../services/api";
 
 const NotificationContext = createContext();
 
@@ -16,7 +17,7 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'https://backendfyp-production-00a3.up.railway.app/api',
+    baseURL: process.env.REACT_APP_API_URL || API.BASE_API_URL,
     headers: {
       'Content-Type': 'application/json',
     },
@@ -99,10 +100,14 @@ export const NotificationProvider = ({ children }) => {
   };
 
   useEffect(() => {
+  fetchNotifications(); // initial call
+
+  const interval = setInterval(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+  }, 150000);
+
+  return () => clearInterval(interval);
+}, [fetchNotifications]);
 
   const value = {
     notifications,

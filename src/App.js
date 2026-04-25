@@ -1,5 +1,5 @@
 // src/App.js - Update imports
-import React from "react";
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 
 // ---------------- Pages ----------------
@@ -48,13 +48,8 @@ import InterviewResult from "./pages/InterviewResult";
 import ScheduleInterview from "./pages/ScheduleInterview";
 import ReviewAnswers from "./pages/ReviewAnswers";
 import FinalizeInterview from "./pages/FinalizeInterview";
-import HRReviewAnswers from "./pages/HRReviewAnswers";
 
 // ---------------- Interview Question Management Pages ----------------
-import HRAddInterviewQuestions from "./pages/HRAddInterviewQuestions";
-import QuestionPreview from "./pages/QuestionPreview";
-import ManageInterviewQuestions from "./pages/ManageInterviewQuestions";
-import CandidateInterviewPage from "./pages/CandidateInterviewPage";
 import HRStartInterview from "./pages/HRStartInterview";
 
 import InterviewPreparation from "./pages/InterviewPreparation";
@@ -69,10 +64,23 @@ import ProtectedRoute from "./components/ProtectedRoute";
 // ✅ Notification Context
 import { NotificationProvider } from "./context/NotificationContext";
 
+// import Blog from "./pages/Blog";
+import Demo from "./pages/Demo";
+import Careers  from "./pages/Careers";
+import Blog from "./pages/Blog";
+// App.js import
+import Pricing from "./pages/Pricing";
 //------------------Profile ----------------------------
 import Profile from "./components/Profile";
+// App.js imports
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import Security from "./pages/Security";
+import Privacy from "./pages/Privacy";
 
 import SimilarJobs from "./pages/SimilarJobs";
+import MainLayout from "./layouts/MainLayout";
+import AppLayout from "./layouts/AppLayout";
 
 // ---------------- Wrappers ----------------
 function AppliedJobsPageWrapper() {
@@ -90,291 +98,93 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Public pages */}
-        <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+
+              {/* 🌐 ALL PAGES WITH TOP NAVBAR */}
+      <Route element={<AppLayout />}>
+
+        <Route path="/" element={<Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
         <Route path="/password-reset" element={<PasswordResetRequest />} />
-        <Route path="/jobseeker/dashboard" element={<JobSeekerDashboard />} />
-        <Route path="/jobseeker/jobs" element={<JobSeekerJobs />} />
-        <Route path="/jobseeker/interviews" element={<JobSeekerInterviews />} />
-        <Route path="/jobseeker/upload-resume" element={<JobSeekerUploadResume />} />
-        <Route path="/jobseeker/profile" element={<JobSeekerProfile />} />
-        <Route path="/jobseeker/applications" element={<JobSeekerApplications />} />
-        <Route path="/jobseeker/analysis" element={<JobSeekerAnalysis />} />
-        <Route path="/jobseeker/settings" element={<JobSeekerSettings />} />
-        <Route path="/jobseeker/interview/:id" element={<JobSeekerInterviewDetail />} />    
-        <Route path="/jobseeker/interview/:interviewId" element={<JobSeekerInterviewDetail />} />
-        <Route path="/jobseeker/interview/:id/questions" element={<CandidateInterviewQuestions />} />
-        <Route path="/jobseeker/interview/:interviewId/start" element={<CandidateInterviewStart />} />
-        <Route path="/jobseeker/interview/:interviewId/questions" element={<CandidateInterviewQuestions />} />
-        <Route path="/jobseeker/interview/:interviewId/result" element={<CandidateInterviewResult />} />
-        <Route path="/jobseeker/interview-prep" element={<InterviewPreparation />} />
-        <Route path="/jobseeker/similar-jobs" element={<SimilarJobs />} />
-
-        <Route
-          path="/password-reset-confirm/:uidb64/:token"
-          element={<PasswordResetConfirm />}
-        />
+        <Route path="/password-reset-confirm/:uidb64/:token" element={<PasswordResetConfirm />} />
         <Route path="/account-status" element={<AccountStatus />} />
 
-        {/* HR Routes */}
-        <Route
-          path="/hr/dashboard"
-          element={
-            <ProtectedRoute>
-              <HRDashboardWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/analytics"
-          element={
-            <ProtectedRoute>
-              <HRAnalytics />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/job/:jobId"
-          element={
-            <ProtectedRoute>
-              <HRJobApplications />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/careers" element={<Careers />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/cookies" element={<Cookies />} />
+        <Route path="/security" element={<Security />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/pricing" element={<Pricing />} />
 
-        {/* ---------------- Interview Module HR Routes ---------------- */}
-        <Route
-          path="/hr/interviews/schedule"
-          element={
-            <ProtectedRoute>
-              <ScheduleInterview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/review"
-          element={
-            <ProtectedRoute>
-              <ReviewAnswers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/finalize"
-          element={
-            <ProtectedRoute>
-              <FinalizeInterview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/answers"
-          element={
-            <ProtectedRoute>
-              <HRReviewAnswers />
-            </ProtectedRoute>
-          }
-        />
+      </Route>
 
-        {/* ---------------- NEW: HR Interview Question Management Routes ---------------- */}
-        <Route
-          path="/hr/interview/:interviewId/add-questions"
-          element={
-            <ProtectedRoute>
-              <HRAddInterviewQuestions />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/manage-questions"
-          element={
-            <ProtectedRoute>
-              <ManageInterviewQuestions />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/question/:questionId/preview"
-          element={
-            <ProtectedRoute>
-              <QuestionPreview />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/questions"
-          element={
-            <ProtectedRoute>
-              <ManageInterviewQuestions />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/hr/job/:jobId" element={<ProtectedRoute><HRJobApplications /></ProtectedRoute>} />
+        {/* 🔥 MAIN LAYOUT WRAPPER (SIDEBAR AREA) */}
+        <Route element={<MainLayout />}>
 
-        {/* Protected user areas */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/resume-upload"
-          element={
-            <ProtectedRoute>
-              <ResumeUpload />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/jobs"
-          element={
-            <ProtectedRoute>
-              <JobsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/jobs/:id"
-          element={
-            <ProtectedRoute>
-              <JobDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/apply/:jobId"
-          element={
-            <ProtectedRoute>
-              <JobApplicationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/applications"
-          element={
-            <ProtectedRoute>
-              <AppliedJobsPageWrapper />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/support"
-          element={
-            <ProtectedRoute>
-              <Support />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/help"
-          element={
-            <ProtectedRoute>
-              <Help />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          }
-        />
+                  <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        <Route path="/help" element={<Help />} />
 
-        {/* Notification Route */}
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <NotificationsPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* USER CORE */}
+          <Route path="/matches" element={<MatchesPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/support" element={<Support />} />
+          
 
-        {/* Job Seeker Routes */}
-        <Route
-          path="/jobseeker/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["job_seeker"]}>
-              <JobSeekerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/matches"
-          element={
-            <ProtectedRoute>
-              <MatchesPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* JOBS */}
+          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/apply/:jobId" element={<JobApplicationPage />} />
+          <Route path="/applications" element={<AppliedJobsPageWrapper />} />
+          <Route path="/resume-upload" element={<ResumeUpload />} />
 
-        <Route
-          path="/interview/:interviewId/take"
-          element={
-            <ProtectedRoute>
-              <CandidateInterviewPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/hr/interview/:interviewId/start"
-          element={
-            <ProtectedRoute>
-              <HRStartInterview />
-            </ProtectedRoute>
-          }
-        />
+          {/* JOB SEEKER */}
+          <Route path="/jobseeker/dashboard" element={<JobSeekerDashboard />} />
+          <Route path="/jobseeker/jobs" element={<JobSeekerJobs />} />
+          <Route path="/jobseeker/applications" element={<JobSeekerApplications />} />
+          <Route path="/jobseeker/profile" element={<JobSeekerProfile />} />
+          <Route path="/jobseeker/settings" element={<JobSeekerSettings />} />
+          <Route path="/jobseeker/analysis" element={<JobSeekerAnalysis />} />
+          <Route path="/jobseeker/interviews" element={<JobSeekerInterviews />} />
+          <Route path="/jobseeker/upload-resume" element={<JobSeekerUploadResume />} />
+          <Route path="/jobseeker/similar-jobs" element={<SimilarJobs />} />
 
-        {/* ---------------- Interview Module Candidate Routes ---------------- */}
-        <Route
-          path="/interviews/upcoming"
-          element={
-            <ProtectedRoute>
-              <UpcomingInterviews />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/interview/:interviewId"
-          element={
-            <ProtectedRoute>
-              <InterviewPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/interview/:interviewId/result"
-          element={
-            <ProtectedRoute>
-              <InterviewResult />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/preparation"
-          element={
-            <ProtectedRoute>
-              <PreparationModules />
-            </ProtectedRoute>
-          }
-        />
+          {/* INTERVIEW */}
+          <Route path="/interviews/upcoming" element={<UpcomingInterviews />} />
+          <Route path="/interview/:interviewId" element={<InterviewPage />} />
+          <Route path="/interview/:interviewId/result" element={<InterviewResult />} />
+          <Route path="/preparation" element={<PreparationModules />} />
+
+          <Route path="/jobseeker/interview-prep" element={<InterviewPreparation />} />
+          <Route path="/jobseeker/interview/:interviewId/start" element={<CandidateInterviewStart />} />
+          <Route path="/jobseeker/interview/:interviewId/questions" element={<CandidateInterviewQuestions />} />
+          <Route path="/jobseeker/interview/:interviewId/result" element={<CandidateInterviewResult />} />
+
+          {/* HR */}
+          <Route path="/hr/dashboard" element={<ProtectedRoute><HRDashboardWrapper /></ProtectedRoute>} />
+          <Route path="/hr/analytics" element={<ProtectedRoute><HRAnalytics /></ProtectedRoute>} />
+          
+
+          <Route path="/hr/interviews/schedule" element={<ProtectedRoute><ScheduleInterview /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/start" element={<ProtectedRoute><HRStartInterview /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/review" element={<ProtectedRoute><ReviewAnswers /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/finalize" element={<ProtectedRoute><FinalizeInterview /></ProtectedRoute>} />
+
+        </Route>
+
       </Routes>
     </Router>
   );
@@ -386,6 +196,42 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <AppContent />
+
+        {/* Toast system goes here (INSIDE providers) */}
+        <Toaster
+  position="top-center"
+  toastOptions={{
+    duration: 2500,
+
+    // 🌟 BASE STYLE
+    style: {
+      width: "100%",
+      maxWidth: "650px",
+      padding: "16px 20px",
+      borderRadius: "14px",
+      fontSize: "15px",
+      fontWeight: "500",
+      lineHeight: "1.4",
+      textAlign: "left",
+    },
+
+    // ✅ SUCCESS
+    success: {
+      style: {
+        background: "#16a34a",
+        color: "#fff",
+      },
+    },
+
+    // ❌ ERROR
+    error: {
+      style: {
+        background: "#dc2626",
+        color: "#fff",
+      },
+    },
+  }}
+/>
       </NotificationProvider>
     </AuthProvider>
   );

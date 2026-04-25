@@ -2,17 +2,149 @@ import React, { useEffect, useState } from "react";
 import { getJobApplications } from "../services/api";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeftIcon,
-  DocumentTextIcon,
-  EnvelopeIcon,
-  UserIcon,
-  StarIcon,
-  AcademicCapIcon,
-  FunnelIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  CalendarIcon,
+  ArrowLeftIcon, DocumentTextIcon, EnvelopeIcon, UserIcon,
+  StarIcon, AcademicCapIcon, FunnelIcon, EyeIcon, EyeSlashIcon, CalendarIcon,
 } from "@heroicons/react/24/outline";
+import { useRef } from "react";
+
+const styles = `
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  .hrja-wrap * { box-sizing: border-box; }
+  .hrja-wrap { font-family: 'DM Sans', sans-serif; min-height: 100vh; background: #f5f6ff; color: #1e1b3a; }
+
+  /* Hero */
+  .hrja-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 52%, #ede9fe 100%);
+    padding: 36px 40px 72px; border-bottom: 1px solid #ddd6fe;
+  }
+  .hrja-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .18; pointer-events: none; }
+  .hrja-blob--1 { width: 380px; height: 380px; background: radial-gradient(circle,#6366f1,transparent); top: -100px; left: -60px; animation: hrja-drift 13s ease-in-out infinite alternate; }
+  .hrja-blob--2 { width: 240px; height: 240px; background: radial-gradient(circle,#8b5cf6,transparent); bottom: -40px; right: 8%; animation: hrja-drift 17s ease-in-out infinite alternate-reverse; }
+  @keyframes hrja-drift { 0%{transform:translate(0,0)} 100%{transform:translate(20px,10px)} }
+  .hrja-grid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(rgba(99,102,241,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.06) 1px,transparent 1px); background-size: 40px 40px; }
+
+  .hrja-hero-inner { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+  .hrja-hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  .hrja-back-btn { display: inline-flex; align-items: center; gap: 8px; color: #6b7280; font-size: 13px; font-weight: 500; cursor: pointer; background: #fff; border: 1px solid #e0e7ff; border-radius: 8px; padding: 7px 14px; margin-bottom: 20px; transition: all .2s; }
+  .hrja-back-btn:hover { color: #4f46e5; border-color: #c7d2fe; background: #f5f3ff; }
+  .hrja-back-btn svg { width: 15px; height: 15px; }
+
+  .hrja-title { font-family: 'Syne', sans-serif; font-size: clamp(18px,3vw,28px); font-weight: 800; color: #1e1b3a; margin: 0 0 6px; letter-spacing: -.3px; }
+  .hrja-subtitle { font-size: 14px; color: #6b7280; margin: 0; }
+  .hrja-deadline { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #9ca3af; margin-top: 6px; }
+  .hrja-deadline svg { width: 14px; height: 14px; }
+
+  /* Stats strip */
+  .hrja-stats-strip { position: relative; z-index: 10; margin: -24px auto 0; max-width: 1200px; padding: 0 40px; }
+  .hrja-stats-inner { background: #fff; border: 1px solid #e0e7ff; border-radius: 14px; display: grid; grid-template-columns: repeat(4,1fr); box-shadow: 0 8px 32px rgba(99,102,241,.1); }
+  .hrja-stat { padding: 16px 20px; }
+  .hrja-stat:not(:last-child) { border-right: 1px solid #e0e7ff; }
+  .hrja-stat-label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
+  .hrja-stat-val { font-size: 22px; font-weight: 800; color: #1e1b3a; }
+
+  /* Main */
+  .hrja-main { max-width: 1200px; margin: 0 auto; padding: 28px 40px 80px; }
+
+  /* Filter card */
+  .hrja-filter-card { background: #fff; border: 1px solid #e0e7ff; border-radius: 14px; padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 4px 16px rgba(99,102,241,.06); }
+  .hrja-filter-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .hrja-filter-label { font-family: 'Syne',sans-serif; font-size: 15px; font-weight: 700; color: #1e1b3a; margin-bottom: 3px; }
+  .hrja-filter-sub { font-size: 13px; color: #9ca3af; }
+  .hrja-filter-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .hrja-number-input { width: 120px; padding: 8px 12px; border: 1px solid #e0e7ff; border-radius: 10px; font-family: 'DM Sans',sans-serif; font-size: 14px; color: #1e1b3a; background: #f5f6ff; outline: none; transition: border-color .2s; }
+  .hrja-number-input:focus { border-color: #a5b4fc; background: #fff; }
+  .hrja-quick-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hrja-qbtn { padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; border: none; transition: all .2s; font-family: 'DM Sans',sans-serif; }
+  .hrja-qbtn--active { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; }
+  .hrja-qbtn--indigo { background: #eef2ff; border: 1px solid #c7d2fe; color: #4f46e5; }
+  .hrja-qbtn--indigo:hover { background: #e0e7ff; }
+  .hrja-qbtn--green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+  .hrja-qbtn--green:hover { background: #dcfce7; }
+
+  /* Status banners */
+  .hrja-banner { border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .hrja-banner--blue { background: #eef2ff; border: 1px solid #c7d2fe; }
+  .hrja-banner--green { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .hrja-banner-left { display: flex; align-items: center; gap: 10px; }
+  .hrja-banner-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hrja-banner-icon--blue { background: #e0e7ff; }
+  .hrja-banner-icon--green { background: #dcfce7; }
+  .hrja-banner-icon svg { width: 18px; height: 18px; }
+  .hrja-banner-title { font-family: 'Syne',sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .hrja-banner-title--blue { color: #4f46e5; }
+  .hrja-banner-title--green { color: #15803d; }
+  .hrja-banner-sub { font-size: 12px; color: #9ca3af; }
+
+  /* Buttons */
+  .hrja-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all .2s; font-family: 'DM Sans',sans-serif; }
+  .hrja-btn--primary { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; box-shadow: 0 4px 12px rgba(79,70,229,.2); }
+  .hrja-btn--primary:hover { transform: translateY(-1px); }
+  .hrja-btn--ghost { background: #f5f6ff; border: 1px solid #e0e7ff; color: #4f46e5; }
+  .hrja-btn--ghost:hover { background: #eef2ff; }
+  .hrja-btn--green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #16a34a; }
+  .hrja-btn svg { width: 15px; height: 15px; }
+
+  /* Table */
+  .hrja-table-head { display: grid; grid-template-columns: 50px 1fr 1fr 100px 70px 70px 80px 80px 70px 140px; gap: 8px; align-items: center; background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 12px 12px 0 0; padding: 12px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6366f1; }
+  .hrja-table-body { background: #fff; border: 1px solid #e0e7ff; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+  .hrja-row { display: grid; grid-template-columns: 50px 1fr 1fr 100px 70px 70px 80px 80px 70px 140px; gap: 8px; align-items: center; padding: 14px 16px; border-bottom: 1px solid #f0f0ff; transition: background .15s; font-size: 13px; }
+  .hrja-row:last-child { border-bottom: none; }
+  .hrja-row:hover { background: #f5f6ff; }
+  .hrja-row--even { background: #fafafe; }
+  .hrja-row--even:hover { background: #f5f6ff; }
+
+  .hrja-rank-badge { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; }
+  .hrja-rank-1 { background: #fef9c3; color: #854d0e; }
+  .hrja-rank-2 { background: #f3f4f6; color: #374151; }
+  .hrja-rank-3 { background: #ffedd5; color: #9a3412; }
+  .hrja-rank-n { background: #eef2ff; color: #4f46e5; }
+  .hrja-shortlisted { font-size: 10px; color: #16a34a; font-weight: 700; margin-top: 2px; text-align: center; }
+
+  .hrja-applicant-name { font-weight: 600; color: #1e1b3a; }
+  .hrja-email { color: #6b7280; display: flex; align-items: center; gap: 4px; }
+  .hrja-email svg { width: 13px; height: 13px; flex-shrink: 0; color: #c7d2fe; }
+  .hrja-score { display: flex; align-items: center; gap: 4px; font-weight: 700; }
+  .hrja-score svg { width: 14px; height: 14px; color: #f59e0b; }
+  .hrja-score--main { color: #4f46e5; font-size: 14px; }
+  .hrja-score--groq { color: #16a34a; }
+  .hrja-score--bert { color: #6366f1; }
+  .hrja-score--custom { color: #ec4899; }
+  .hrja-score--hf { color: #7c3aed; }
+  .hrja-score-null { color: #d1d5db; }
+  .hrja-cgpa { display: flex; align-items: center; gap: 4px; color: #6b7280; }
+  .hrja-cgpa svg { width: 14px; height: 14px; color: #a78bfa; }
+  .hrja-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* Empty */
+  .hrja-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; background: #fff; border: 1px solid #e0e7ff; border-radius: 14px; text-align: center; }
+  .hrja-empty svg { width: 48px; height: 48px; color: #c7d2fe; margin-bottom: 14px; }
+  .hrja-empty-text { font-size: 15px; color: #9ca3af; }
+
+  /* Footer */
+  .hrja-footer { margin-top: 20px; text-align: center; font-size: 13px; color: #9ca3af; }
+  .hrja-footer a { color: #4f46e5; text-decoration: underline; cursor: pointer; background: none; border: none; font-size: 13px; }
+
+  /* Modal */
+  .hrja-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+  .hrja-modal { background: #fff; border: 1px solid #e0e7ff; border-radius: 20px; box-shadow: 0 24px 72px rgba(99,102,241,.2); max-width: 480px; width: 100%; padding: 28px; position: relative; animation: hrja-modal-in .25s ease; }
+  @keyframes hrja-modal-in { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
+  .hrja-modal-close { position: absolute; top: 16px; right: 16px; width: 28px; height: 28px; border-radius: 50%; background: #f3f4f6; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: #6b7280; transition: background .2s; }
+  .hrja-modal-close:hover { background: #e0e7ff; color: #4f46e5; }
+  .hrja-modal-title { font-family: 'Syne',sans-serif; font-size: 18px; font-weight: 800; color: #1e1b3a; margin: 0 0 18px; }
+  .hrja-modal-row { margin-bottom: 12px; font-size: 14px; color: #4b5563; }
+  .hrja-modal-row strong { color: #1e1b3a; }
+
+  /* Loading */
+  .hrja-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; gap: 20px; }
+  .hrja-spinner { width: 44px; height: 44px; border: 3px solid #e0e7ff; border-top-color: #6366f1; border-radius: 50%; animation: hrja-spin .8s linear infinite; }
+  @keyframes hrja-spin { to{transform:rotate(360deg)} }
+
+  @media(max-width:1100px){ .hrja-table-head,.hrja-row{display:block;} .hrja-table-head{display:none} }
+  @media(max-width:640px){ .hrja-hero{padding:28px 16px 60px} .hrja-stats-strip{padding:0 16px} .hrja-main{padding:28px 16px 60px} .hrja-stats-inner{grid-template-columns:repeat(2,1fr)} }
+`;
 
 function HRJobApplications() {
   const { jobId } = useParams();
@@ -24,566 +156,210 @@ function HRJobApplications() {
   const [isFiltered, setIsFiltered] = useState(false);
   const [jobDeadline, setJobDeadline] = useState(null);
   const [shortlistCount, setShortlistCount] = useState(10);
-  const navigate = useNavigate();
-  // const [jobs, setJobs] = useState([]);
-  // const [loading, setLoading] = useState(true);
   const [selectedAnalysis, setSelectedAnalysis] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const intervalRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplications = async () => {
       setLoading(true);
       try {
         const data = await getJobApplications(jobId);
-        
-        console.log("API Response:", data); // Debug log
-
         setJobTitle(data.title || data.job_title || "Job");
-        
-        // Get job deadline if available
-        if (data.application_deadline) {
-          setJobDeadline(new Date(data.application_deadline));
-        }
-
-        // Get shortlist count from ranking_config
-        if (data.ranking_config?.shortlist_count) {
-          setShortlistCount(data.ranking_config.shortlist_count);
-        }
-
-        // Get ALL applications from API response
+        if (data.application_deadline) setJobDeadline(new Date(data.application_deadline));
+        if (data.ranking_config?.shortlist_count) setShortlistCount(data.ranking_config.shortlist_count);
         let allApps = data.applications || [];
-        
-        console.log("Number of applications received:", allApps.length); // Debug log
-        
-        // Sort descending by final rank (handle null/undefined)
-        allApps.sort((a, b) => {
-          const aScore = a.rank_score ?? 0;
-          const bScore = b.rank_score ?? 0;
-          return bScore - aScore; // Descending
-        });
-
-        // Store all applications
-        setAllApplications(allApps);
-        // Initially show ALL applications
-        setApplications(allApps);
-        
-      } catch (err) {
-        console.error("Error fetching applications:", err);
-        setAllApplications([]);
-        setApplications([]);
-      } finally {
-        setLoading(false);
-      }
+        allApps.sort((a,b)=>(b.rank_score??0)-(a.rank_score??0));
+        setAllApplications(allApps); setApplications(allApps);
+      } catch { setAllApplications([]); setApplications([]); }
+      finally { setLoading(false); }
     };
-
     fetchApplications();
   }, [jobId]);
 
-  // Poll backend for Gradio scores every 5 seconds
-useEffect(() => {
-  const interval = setInterval(() => {
-    // Check if any application has gradio_match_score === null
-    if (applications.some(app => app.gradio_match_score === null || app.gradio_match_score === undefined)) {
-      getJobApplications(jobId).then((data) => {
-        const allApps = data.applications || [];
-        allApps.sort((a, b) => (b.rank_score ?? 0) - (a.rank_score ?? 0));
-        setApplications(allApps);
-        setAllApplications(allApps);
-      }).catch(err => console.error("Failed to refresh Gradio scores:", err));
-    }
-  }, 5000); // poll every 5 seconds
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      getJobApplications(jobId).then(data => {
+        const allApps = (data.applications||[]).sort((a,b)=>(b.rank_score??0)-(a.rank_score??0));
+        setApplications(allApps); setAllApplications(allApps);
+      }).catch(()=>{});
+    }, 30000);
+    return () => clearInterval(intervalRef.current);
+  }, [jobId]);
 
-  return () => clearInterval(interval); // cleanup on unmount
-}, [applications, jobId]);
-
-
-  // Function to filter applications based on entered count
-  const filterApplications = () => {
-    if (!showCount || showCount === "" || isNaN(parseInt(showCount))) {
-      // If no valid count, show all
-      setApplications(allApplications);
-      setIsFiltered(false);
-      return;
-    }
-
-    const count = parseInt(showCount);
-    if (count <= 0) {
-      setApplications([]);
-      setIsFiltered(true);
-      return;
-    }
-
-    // Show only the top N applications (shortlist)
-    const filtered = allApplications.slice(0, count);
-    setApplications(filtered);
-    setIsFiltered(true);
+  const applyFilter = (count) => {
+    if (!count || isNaN(parseInt(count))) { setApplications(allApplications); setIsFiltered(false); return; }
+    const n = parseInt(count); if (n <= 0) { setApplications([]); setIsFiltered(true); return; }
+    setApplications(allApplications.slice(0,n)); setIsFiltered(true);
   };
 
-  // Function to show all applications
-  const showAllApplications = () => {
-    setApplications(allApplications);
-    setShowCount("");
-    setIsFiltered(false);
-  };
+  const showAll = () => { setApplications(allApplications); setShowCount(""); setIsFiltered(false); };
 
-  // Function to apply the job's shortlist count
-  const applyJobShortlist = () => {
-    if (allApplications.length > 0) {
-      setShowCount(shortlistCount.toString());
-      const filtered = allApplications.slice(0, shortlistCount);
-      setApplications(filtered);
-      setIsFiltered(true);
-    }
-  };
+  const handleCountChange = (e) => { const v = e.target.value; setShowCount(v); applyFilter(v); };
 
-  // Function to handle input change and update filtered list immediately
-  const handleShowCountChange = (e) => {
-    const value = e.target.value;
-    setShowCount(value);
-    
-    if (!value || value === "" || isNaN(parseInt(value))) {
-      // If empty or invalid, show all
-      setApplications(allApplications);
-      setIsFiltered(false);
-      return;
-    }
-    
-    const count = parseInt(value);
-    if (count <= 0) {
-      setApplications([]);
-      setIsFiltered(true);
-      return;
-    }
-    
-    // Automatically apply filter when typing
-    const filtered = allApplications.slice(0, count);
-    setApplications(filtered);
-    setIsFiltered(true);
-  };
-
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen text-gray-600">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-400 border-t-transparent rounded-full mr-3" />
-        <p className="text-lg font-medium">Loading applications...</p>
-      </div>
-    );
+  if (loading) return (
+    <div className="hrja-wrap"><style>{styles}</style>
+      <div className="hrja-loading"><div className="hrja-spinner"/><p style={{color:"#6366f1",fontWeight:500}}>Loading applications…</p></div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 sm:px-6 py-8 md:py-10">
-      <div className="max-w-7xl mx-auto">
-        {/* Header with Back Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/hr/analytics")}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-gray-100 transition"
-            >
-              <ArrowLeftIcon className="h-5 w-5 text-gray-700" />
-              <span className="font-medium text-gray-700 hidden sm:inline">Back to Analytics</span>
-            </button>
-          </div>
+    <div className="hrja-wrap">
+      <style>{styles}</style>
 
-          <div className="text-center sm:text-right">
-            <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">
-              {jobTitle} — Applications
-            </h2>
-            <p className="text-gray-500 text-sm sm:text-lg">
-              📊 <span className="font-bold">Total Applicants:</span> {allApplications.length} 
-              • 📋 <span className="font-bold">Showing:</span> <span className={isFiltered ? 'text-blue-600' : 'text-green-600'}>{applications.length}</span>
-              {isFiltered && ` (Top ${showCount} Shortlisted)`}
-            </p>
-            {jobDeadline && (
-              <div className="flex items-center justify-center sm:justify-end gap-2 text-sm text-gray-500 mt-1">
-                <CalendarIcon className="h-4 w-4" />
-                <span>Deadline: {jobDeadline.toLocaleDateString()}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Filter Controls */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <FunnelIcon className="h-6 w-6 text-blue-600" />
-              <div>
-                <h3 className="font-semibold text-gray-800">Shortlist Filter</h3>
-                <p className="text-sm text-gray-500">
-                  Job shortlist count: <span className="font-bold">{shortlistCount}</span> • Showing all {allApplications.length} applicants
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="1"
-                    max={allApplications.length}
-                    value={showCount}
-                    onChange={handleShowCountChange}
-                    placeholder={`Default: ${shortlistCount}`}
-                    className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-                    / {allApplications.length}
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => {
-                    if (!showCount || showCount === "") {
-                      showAllApplications();
-                    } else {
-                      filterApplications();
-                    }
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-                >
-                  <EyeIcon className="h-5 w-5" />
-                  <span className="hidden sm:inline">Apply</span>
-                </button>
-              </div>
-
-              {isFiltered ? (
-                <button
-                  onClick={showAllApplications}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
-                >
-                  <EyeSlashIcon className="h-5 w-5" />
-                  <span className="hidden sm:inline">Show All</span>
-                </button>
-              ) : (
-                <button
-                  onClick={applyJobShortlist}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
-                >
-                  <FunnelIcon className="h-5 w-5" />
-                  <span className="hidden sm:inline">Apply Job Shortlist</span>
-                </button>
+      {/* Hero */}
+      <div className="hrja-hero">
+        <div className="hrja-blob hrja-blob--1"/><div className="hrja-blob hrja-blob--2"/><div className="hrja-grid"/>
+        <div className="hrja-hero-inner">
+          <button className="hrja-back-btn" onClick={()=>navigate("/hr/analytics")}><ArrowLeftIcon/>Back to Analytics</button>
+          <div className="hrja-hero-top">
+            <div>
+              <h1 className="hrja-title">{jobTitle} — Applications</h1>
+              <p className="hrja-subtitle">
+                📊 <strong>{allApplications.length}</strong> total applicants · Showing <strong style={{color:isFiltered?"#4f46e5":"#16a34a"}}>{applications.length}</strong>
+                {isFiltered && ` (Top ${showCount} Shortlisted)`}
+              </p>
+              {jobDeadline && (
+                <div className="hrja-deadline"><CalendarIcon/>Deadline: {jobDeadline.toLocaleDateString()}</div>
               )}
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <button
-              onClick={() => {
-                setShowCount(allApplications.length.toString());
-                setApplications(allApplications);
-                setIsFiltered(false);
-              }}
-              className={`px-3 py-1.5 text-sm rounded-lg transition ${
-                !isFiltered 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-green-50 text-green-700 hover:bg-green-100'
-              }`}
-            >
-              Show All ({allApplications.length})
-            </button>
-            <button
-              onClick={() => {
-                const count = Math.min(shortlistCount, allApplications.length);
-                setShowCount(count.toString());
-                const filtered = allApplications.slice(0, count);
-                setApplications(filtered);
-                setIsFiltered(true);
-              }}
-              className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition"
-            >
-              Top {shortlistCount} (Job Shortlist)
-            </button>
-            <button
-              onClick={() => {
-                const count = Math.min(2, allApplications.length);
-                setShowCount(count.toString());
-                const filtered = allApplications.slice(0, count);
-                setApplications(filtered);
-                setIsFiltered(true);
-              }}
-              className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition"
-            >
-              Top 2
-            </button>
-            <button
-              onClick={() => {
-                const count = Math.min(5, allApplications.length);
-                setShowCount(count.toString());
-                const filtered = allApplications.slice(0, count);
-                setApplications(filtered);
-                setIsFiltered(true);
-              }}
-              className="px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition"
-            >
-              Top 5
-            </button>
-            <button
-              onClick={() => {
-                const count = Math.min(10, allApplications.length);
-                setShowCount(count.toString());
-                const filtered = allApplications.slice(0, count);
-                setApplications(filtered);
-                setIsFiltered(true);
-              }}
-              className="px-3 py-1.5 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition"
-            >
-              Top 10
-            </button>
+      {/* Stats */}
+      <div className="hrja-stats-strip">
+        <div className="hrja-stats-inner">
+          <div className="hrja-stat">
+            <div className="hrja-stat-label">Total Applicants</div>
+            <div className="hrja-stat-val">{allApplications.length}</div>
+          </div>
+          <div className="hrja-stat">
+            <div className="hrja-stat-label">Showing</div>
+            <div className="hrja-stat-val" style={{color:"#4f46e5"}}>{applications.length}</div>
+          </div>
+          <div className="hrja-stat">
+            <div className="hrja-stat-label">Top Score</div>
+            <div className="hrja-stat-val" style={{color:"#16a34a"}}>{allApplications[0]?.rank_score?.toFixed(1)||"0"}%</div>
+          </div>
+          <div className="hrja-stat">
+            <div className="hrja-stat-label">Shortlist Count</div>
+            <div className="hrja-stat-val" style={{color:"#7c3aed"}}>{shortlistCount}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="hrja-main">
+        {/* Filter card */}
+        <div className="hrja-filter-card">
+          <div className="hrja-filter-top">
+            <div>
+              <div className="hrja-filter-label"><FunnelIcon style={{width:16,height:16,display:"inline",verticalAlign:"middle",marginRight:6}}/>Shortlist Filter</div>
+              <div className="hrja-filter-sub">Job shortlist: <strong>{shortlistCount}</strong> · {allApplications.length} total applicants</div>
+            </div>
+            <div className="hrja-filter-controls">
+              <input type="number" min="1" max={allApplications.length} value={showCount} onChange={handleCountChange} placeholder={`Default: ${shortlistCount}`} className="hrja-number-input"/>
+              <button className="hrja-btn hrja-btn--primary" onClick={()=>applyFilter(showCount||shortlistCount)}><EyeIcon/>Apply</button>
+              {isFiltered && <button className="hrja-btn hrja-btn--green" onClick={showAll}><EyeSlashIcon/>Show All</button>}
+            </div>
+          </div>
+          <div className="hrja-quick-btns">
+            <button className={`hrja-qbtn ${!isFiltered?"hrja-qbtn--active":"hrja-qbtn--green"}`} onClick={()=>{showAll();}}>All ({allApplications.length})</button>
+            {[2,5,10,shortlistCount].filter((v,i,a)=>a.indexOf(v)===i).map(n=>(
+              <button key={n} className="hrja-qbtn hrja-qbtn--indigo" onClick={()=>{const c=Math.min(n,allApplications.length);setShowCount(c.toString());setApplications(allApplications.slice(0,c));setIsFiltered(true);}}>Top {n}</button>
+            ))}
           </div>
         </div>
 
-        {/* Summary Stats */}
-        {allApplications.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-xl shadow-sm border">
-              <div className="text-sm text-gray-500">Total Applicants</div>
-              <div className="text-2xl font-bold text-gray-800">{allApplications.length}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                All applications received
+        {/* Status banner */}
+        {isFiltered ? (
+          <div className="hrja-banner hrja-banner--blue">
+            <div className="hrja-banner-left">
+              <div className="hrja-banner-icon hrja-banner-icon--blue"><FunnelIcon style={{width:18,height:18,color:"#4f46e5"}}/></div>
+              <div>
+                <div className="hrja-banner-title hrja-banner-title--blue">Shortlist Mode Active</div>
+                <div className="hrja-banner-sub">Showing top {showCount} of {allApplications.length} applicants</div>
               </div>
             </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border">
-              <div className="text-sm text-gray-500">Currently Showing</div>
-              <div className="text-2xl font-bold text-blue-600">{applications.length}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {isFiltered ? `Top ${showCount} shortlisted` : 'All applicants'}
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border">
-              <div className="text-sm text-gray-500">Top Score</div>
-              <div className="text-2xl font-bold text-green-600">
-                {allApplications[0]?.rank_score?.toFixed(1) || "0"}%
-              </div>
-              <div className="text-xs text-gray-500 mt-1 truncate">
-                Best candidate
-              </div>
-            </div>
-            <div className="bg-white p-4 rounded-xl shadow-sm border">
-              <div className="text-sm text-gray-500">Job Shortlist Count</div>
-              <div className="text-2xl font-bold text-purple-600">{shortlistCount}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                Configured for this job
-              </div>
-            </div>
+            <button className="hrja-btn hrja-btn--ghost" onClick={showAll}>Show All {allApplications.length}</button>
           </div>
-        )}
+        ) : allApplications.length > 0 ? (
+          <div className="hrja-banner hrja-banner--green">
+            <div className="hrja-banner-left">
+              <div className="hrja-banner-icon hrja-banner-icon--green"><EyeSlashIcon style={{width:18,height:18,color:"#16a34a"}}/></div>
+              <div>
+                <div className="hrja-banner-title hrja-banner-title--green">Showing All Applicants</div>
+                <div className="hrja-banner-sub">{applications.length} applicants · Job shortlist: {shortlistCount}</div>
+              </div>
+            </div>
+            <button className="hrja-btn hrja-btn--primary" onClick={()=>{const c=Math.min(shortlistCount,allApplications.length);setShowCount(c.toString());setApplications(allApplications.slice(0,c));setIsFiltered(true);}}>Apply Shortlist ({shortlistCount})</button>
+          </div>
+        ) : null}
 
-        {/* Empty State */}
+        {/* Empty */}
         {allApplications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <DocumentTextIcon className="h-12 w-12 text-gray-400 mb-3" />
-            <p className="text-gray-500 text-lg">No applications for this job yet.</p>
-          </div>
+          <div className="hrja-empty"><DocumentTextIcon/><p className="hrja-empty-text">No applications for this job yet.</p></div>
         ) : (
           <>
-            {/* Status Banner */}
-            {isFiltered ? (
-              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FunnelIcon className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-blue-800">Shortlist Mode Active</p>
-                      <p className="text-sm text-blue-600">
-                        Showing top {showCount} of {allApplications.length} applicants
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={showAllApplications}
-                    className="px-4 py-2 bg-white text-blue-700 border border-blue-300 rounded-lg hover:bg-blue-50 transition"
-                  >
-                    Show All {allApplications.length}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <EyeSlashIcon className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-green-800">Showing All Applicants</p>
-                      <p className="text-sm text-green-600">
-                        Viewing all {applications.length} applicants • Job shortlist: {shortlistCount}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={applyJobShortlist}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Apply Job Shortlist ({shortlistCount})
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 items-center text-sm font-semibold text-gray-600 bg-gray-100 rounded-t-2xl p-4">
-              <div className="col-span-1 text-center">Rank</div>
-              <div className="col-span-2">Applicant</div>
-              <div className="col-span-2">Email</div>
-              <div className="col-span-2 text-center">Final Score</div>
-              <div className="col-span-1 text-center">Groq</div>
-              <div className="col-span-1 text-center">BERT</div>
-              <div className="col-span-1 text-center">Custom ML</div>
-
-              {/* ✅ ADD THIS */}
-              <div className="col-span-1 text-center">HF Model</div>
-
-              <div className="col-span-1 text-center">CGPA</div>
-              <div className="col-span-2 text-center">Actions</div>
+            {/* Table header — desktop only via CSS */}
+            <div className="hrja-table-head">
+              <div style={{textAlign:"center"}}>Rank</div>
+              <div>Applicant</div>
+              <div>Email</div>
+              <div style={{textAlign:"center"}}>Final Score</div>
+              <div style={{textAlign:"center"}}>Groq</div>
+              <div style={{textAlign:"center"}}>BERT</div>
+              <div style={{textAlign:"center"}}>Custom ML</div>
+              <div style={{textAlign:"center"}}>HF Model</div>
+              <div style={{textAlign:"center"}}>CGPA</div>
+              <div style={{textAlign:"center"}}>Actions</div>
             </div>
-
-
-            {/* Applications List */}
-            <div className="bg-white rounded-b-2xl shadow overflow-hidden">
+            <div className="hrja-table-body">
               {applications.map((app, idx) => {
                 const firstName = app.first_name || app.applicant?.first_name || "";
                 const lastName = app.last_name || app.applicant?.last_name || "";
-                const fullName = firstName || lastName
-                  ? `${firstName} ${lastName}`.trim()
-                  : app.applicant_name || "N/A";
-
+                const fullName = firstName||lastName ? `${firstName} ${lastName}`.trim() : app.applicant_name || "N/A";
                 const email = app.applicant_email || app.applicant?.email || "N/A";
                 const resumeUrl = app.resume_url || app.resume || null;
-
                 const finalRank = app.rank_score ?? 0;
                 const groqRank = app.groq_rank ?? 0;
                 const bertScore = app.bert_similarity ?? 0;
                 const customML = app.custom_model_score ?? 0;
                 const gradioScore = app.gradio_match_score;
                 const cgpa = app.cgpa ?? "N/A";
-
-                const rowBg = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
+                const rankClass = idx===0?"hrja-rank-1":idx===1?"hrja-rank-2":idx===2?"hrja-rank-3":"hrja-rank-n";
 
                 return (
-                  <div
-                    key={app.id ?? idx}
-                    className={`${rowBg} grid grid-cols-1 md:grid-cols-12 gap-4 items-center`}
-                  >
-                    {/* Rank Number */}
-                    <div className="md:col-span-1 text-center">
-                      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full font-bold ${
-                        idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                        idx === 1 ? 'bg-gray-100 text-gray-700' :
-                        idx === 2 ? 'bg-orange-100 text-orange-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {idx + 1}
-                      </div>
-                      {isFiltered && idx < parseInt(showCount || 0) && (
-                        <div className="text-xs text-green-600 mt-1 font-medium">✓ Shortlisted</div>
-                      )}
+                  <div key={app.id??idx} className={`hrja-row${idx%2!==0?" hrja-row--even":""}`}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+                      <div className={`hrja-rank-badge ${rankClass}`}>{idx+1}</div>
+                      {isFiltered && idx < parseInt(showCount||0) && <div className="hrja-shortlisted">✓ Listed</div>}
                     </div>
-
-                    {/* Applicant */}
-                    <div className="md:col-span-2 flex items-center gap-3">
-                      <UserIcon className="h-6 w-6 text-blue-500 shrink-0" />
-                      <div>
-                        <div className="font-medium text-gray-800 truncate">{fullName}</div>
-                        <div className="text-xs text-gray-500 md:hidden truncate mt-1">{email}</div>
-                      </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <UserIcon style={{width:16,height:16,color:"#6366f1",flexShrink:0}}/>
+                      <span className="hrja-applicant-name">{fullName}</span>
                     </div>
-
-                    {/* Email */}
-                    <div className="md:col-span-2 hidden md:flex items-center gap-2 text-gray-600">
-                      <EnvelopeIcon className="h-5 w-5 text-gray-400 shrink-0" />
-                      <span className="truncate">{email}</span>
+                    <div className="hrja-email"><EnvelopeIcon/><span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{email}</span></div>
+                    <div style={{textAlign:"center"}}>
+                      {finalRank ? <span className="hrja-score hrja-score--main"><StarIcon/>{finalRank.toFixed(1)}%</span> : <span className="hrja-score-null">—</span>}
                     </div>
-
-                    {/* Final Score */}
-                    <div className="md:col-span-2 text-center font-semibold text-blue-700 flex justify-center items-center gap-1">
-                      {finalRank ? (
-                        <>
-                          <StarIcon className="h-5 w-5 text-yellow-500" />
-                          {finalRank.toFixed(1)}%
-                        </>
-                      ) : (
-                        <span className="text-gray-400">—</span>
-                      )}
+                    <div style={{textAlign:"center"}} className={groqRank?"hrja-score hrja-score--groq":"hrja-score-null"}>{groqRank?`${groqRank.toFixed(1)}%`:"—"}</div>
+                    <div style={{textAlign:"center"}} className={bertScore?"hrja-score hrja-score--bert":"hrja-score-null"}>{bertScore?`${bertScore.toFixed(1)}%`:"—"}</div>
+                    <div style={{textAlign:"center"}} className={customML?"hrja-score hrja-score--custom":"hrja-score-null"}>{customML?`${customML.toFixed(1)}%`:"—"}</div>
+                    <div style={{textAlign:"center"}}>
+                      <button className={`${gradioScore?"hrja-score hrja-score--hf":"hrja-score-null"}`} style={{background:"none",border:"none",cursor:"pointer",textDecoration:"underline",font:"inherit"}}
+                        onClick={()=>{setSelectedAnalysis(app.gradio_analysis||{matching_analysis:"Analysis unavailable",description:"No description",score:0,recommendation:"Scores will be retried automatically."});setIsModalOpen(true);}}>
+                        {gradioScore?`${gradioScore.toFixed(1)}%`:"Processing…"}
+                      </button>
                     </div>
-
-                    {/* Groq Rank */}
-                    <div className="md:col-span-1 text-center">
-                      <div className={`font-medium ${groqRank ? 'text-green-600' : 'text-gray-400'}`}>
-                        {groqRank ? `${groqRank.toFixed(1)}%` : "—"}
-                      </div>
-                    </div>
-
-                    {/* BERT Similarity */}
-                    <div className="md:col-span-1 text-center">
-                      <div className={`font-medium ${bertScore ? 'text-indigo-600' : 'text-gray-400'}`}>
-                        {bertScore ? `${bertScore.toFixed(1)}%` : "—"}
-                      </div>
-                    </div>
-
-                    {/* Custom ML Score */}
-                    <div className="md:col-span-1 text-center">
-                      <div className={`font-medium ${customML ? 'text-pink-600' : 'text-gray-400'}`}>
-                        {customML ? `${customML.toFixed(1)}%` : "—"}
-                      </div>
-                    </div>
-                  {/* ✅ Gradio Score buttojn click functionality */}
-                  <div className="md:col-span-1 text-center">
-                  <button
-                    onClick={() => {
-                      setSelectedAnalysis(app.gradio_analysis || {
-                        matching_analysis: "Analysis unavailable",
-                        description: "No description",
-                        score: 0,
-                        recommendation: "Other analysis scores are available. Match score will be retried automatically."
-                      });
-                      setIsModalOpen(true);
-                    }}
-                    className={`font-medium ${
-                      gradioScore ? 'text-purple-600' : 'text-gray-400'
-                    } relative hover:underline hover:text-purple-800 hover:scale-105 transition-all duration-200 cursor-pointer`}
-                    title="Click to view detailed analysis"
-                  >
-                    {gradioScore ? `${gradioScore.toFixed(1)}%` : 'Processing...'}
-                  </button>
-                </div>
-
-
-
-                    {/* CGPA */}
-                    <div className="md:col-span-1 flex justify-center items-center text-center text-gray-700 gap-1 h-full">
-                    <AcademicCapIcon className="h-5 w-5 text-purple-500" />
-                    <span>{cgpa}</span>
-                  </div>
-
-
-                    {/* Actions */}
-                    <div className="md:col-span-2 flex flex-col sm:flex-row justify-center gap-2">
+                    <div className="hrja-cgpa"><AcademicCapIcon/>{cgpa}</div>
+                    <div className="hrja-actions">
                       {resumeUrl ? (
-                        <a
-                          href={resumeUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm"
-                        >
-                          <DocumentTextIcon className="h-4 w-4" />
-                          <span>Resume</span>
-                        </a>
-                      ) : (
-                        <span className="text-gray-400 px-3 py-2 text-sm">No resume</span>
-                      )}
-                      
-                      <button
-                        onClick={() => {
-                          navigate(`/hr/schedule-interview?candidate=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&jobId=${jobId}`);
-                        }}
-                        className="px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition text-sm"
-                      >
+                        <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="hrja-btn hrja-btn--ghost" style={{fontSize:12,padding:"6px 10px"}}><DocumentTextIcon/>Resume</a>
+                      ) : <span style={{fontSize:12,color:"#d1d5db"}}>No resume</span>}
+                      <button className="hrja-btn hrja-btn--primary" style={{fontSize:12,padding:"6px 10px"}}
+                        onClick={()=>navigate(`/hr/schedule-interview?candidate=${encodeURIComponent(fullName)}&email=${encodeURIComponent(email)}&jobId=${jobId}`)}>
                         Schedule
                       </button>
                     </div>
@@ -592,51 +368,28 @@ useEffect(() => {
               })}
             </div>
 
-            {/* Info Footer */}
-            <div className="mt-6 text-center text-sm text-gray-500">
+            <div className="hrja-footer">
               {isFiltered ? (
-                <p>
-                  <span className="font-medium text-blue-600">Shortlisted {applications.length} applicants</span> 
-                  {' • '}
-                  <button 
-                    onClick={showAllApplications}
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    View all {allApplications.length} applicants
-                  </button>
-                </p>
+                <p>Shortlisted {applications.length} · <button onClick={showAll}>View all {allApplications.length}</button></p>
               ) : (
-                <p>
-                  <span className="font-medium text-green-600">Viewing all {applications.length} of {allApplications.length} applicants</span>
-                  {' • '}
-                  <button 
-                    onClick={applyJobShortlist}
-                    className="text-blue-600 hover:text-blue-800 underline ml-1"
-                  >
-                    Apply job shortlist ({shortlistCount})
-                  </button>
-                </p>
+                <p>Viewing all {applications.length} · <button onClick={()=>{const c=Math.min(shortlistCount,allApplications.length);setShowCount(c.toString());setApplications(allApplications.slice(0,c));setIsFiltered(true);}}>Apply shortlist ({shortlistCount})</button></p>
               )}
             </div>
-            {/* ✅ Gradio Analysis Modal */}
-            {isModalOpen && selectedAnalysis && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 relative">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 font-bold"
-                  >
-                    ✕
-                  </button>
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Model  Detailed Analysis</h3>
-                  <p><span className="font-semibold">Matching Analysis:</span> {selectedAnalysis.matching_analysis}</p>
-                  <p className="mt-2"><span className="font-semibold">Description:</span> {selectedAnalysis.description}</p>
-                  <p className="mt-2"><span className="font-semibold">Score:</span> {selectedAnalysis.score}</p>
-                  <p className="mt-2"><span className="font-semibold">Recommendation:</span> {selectedAnalysis.recommendation}</p>
-                </div>
-              </div>
-            )}
           </>
+        )}
+
+        {/* Modal */}
+        {isModalOpen && selectedAnalysis && (
+          <div className="hrja-modal-overlay" onClick={()=>setIsModalOpen(false)}>
+            <div className="hrja-modal" onClick={e=>e.stopPropagation()}>
+              <button className="hrja-modal-close" onClick={()=>setIsModalOpen(false)}>✕</button>
+              <h3 className="hrja-modal-title">Detailed Analysis</h3>
+              <div className="hrja-modal-row"><strong>Matching Analysis:</strong> {selectedAnalysis.matching_analysis}</div>
+              <div className="hrja-modal-row"><strong>Description:</strong> {selectedAnalysis.description}</div>
+              <div className="hrja-modal-row"><strong>Score:</strong> {selectedAnalysis.score}</div>
+              <div className="hrja-modal-row"><strong>Recommendation:</strong> {selectedAnalysis.recommendation}</div>
+            </div>
+          </div>
         )}
       </div>
     </div>

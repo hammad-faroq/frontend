@@ -5,6 +5,7 @@ import {
   finalizeInterview,
   gradeCandidateAnswer,
 } from "../services/interviewApi";
+import toast from "react-hot-toast";
 
 const HRReviewAnswers = () => {
   const { interviewId } = useParams();
@@ -210,7 +211,7 @@ const HRReviewAnswers = () => {
     
     // For auto-only mode, disable saving HR scores
     if (scoringMode === "AUTO_ONLY") {
-      alert("Auto-scoring is enabled. HR scores cannot be modified in this mode.");
+      toast.error("Auto-scoring is enabled. HR scores cannot be modified in this mode.");
       return;
     }
     
@@ -223,7 +224,7 @@ const HRReviewAnswers = () => {
       );
       
       if (answersToSave.length === 0) {
-        alert("No changes to save! Please enter scores or feedback.");
+        toast.error("No changes to save! Please enter scores or feedback.");
         return;
       }
 
@@ -239,7 +240,7 @@ const HRReviewAnswers = () => {
       const results = await Promise.all(savePromises);
       console.log("Save results:", results);
       
-      alert(`${answersToSave.length} score(s) and feedback saved successfully!`);
+      toast.success(`${answersToSave.length} score(s) and feedback saved successfully!`);
       
       // Refresh data
       const data = await reviewCandidateAnswers(interviewId);
@@ -268,7 +269,7 @@ const HRReviewAnswers = () => {
       
     } catch (err) {
       console.error("Save error:", err);
-      alert(`Failed to save scores: ${err.message || "Please try again."}`);
+      toast.error(`Failed to save scores: ${err.message || "Please try again."}`);
     } finally {
       setSaving(false);
     }
@@ -296,7 +297,7 @@ const HRReviewAnswers = () => {
       
       // Check if backend returned success
       if (result.success) {
-        alert(`✅ Interview finalized successfully!\n\n` +
+        toast.success(`✅ Interview finalized successfully!\n\n` +
               `Final Score: ${result.result?.total_score || 0}/${result.result?.max_score || 0}\n` +
               `Percentage: ${result.result?.percentage || 0}%\n` +
               `Performance Level: ${result.result?.performance_level || 'N/A'}\n\n` +
@@ -305,7 +306,7 @@ const HRReviewAnswers = () => {
         // Refresh the page to show updated status
         window.location.reload();
       } else {
-        alert(`❌ Finalization failed: ${result.message || 'Unknown error'}`);
+        toast.error(`❌ Finalization failed: ${result.message || 'Unknown error'}`);
       }
       
     } catch (err) {
@@ -328,7 +329,7 @@ const HRReviewAnswers = () => {
         }
       }
       
-      alert(errorMessage);
+      toast.error(errorMessage);
       
     } finally {
       setFinalizing(false);

@@ -7,6 +7,7 @@ function JobSeekerApplications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [selectedJob, setSelectedJob] = useState(null);
 
   useEffect(() => {
     fetchApplications();
@@ -84,7 +85,7 @@ function JobSeekerApplications() {
                   {applications.map((application) => (
                     <tr key={application.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{application.job_title}</div>
+                        <div className="font-medium text-gray-900">{application.job.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-gray-900">{application.company_name}</div>
@@ -101,12 +102,12 @@ function JobSeekerApplications() {
                           application.status === 'rejected' ? 'bg-red-100 text-red-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {application.status || 'Submitted'}
+                          {application.job.status || 'Submitted'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => navigate(`/jobs/${application.job_id}`)}
+                          onClick={() => setSelectedJob(application)}
                           className="text-blue-600 hover:text-blue-900 mr-4"
                         >
                           View Job
@@ -119,9 +120,76 @@ function JobSeekerApplications() {
             </div>
           </div>
         )}
+        {/* Job Detail Modal */}
+        {selectedJob && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800 mb-1">{selectedJob.title}</h2>
+                    <p className="text-gray-600 text-lg">{selectedJob.company_name} • {selectedJob.job.location}</p>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedJob(null)}
+                    className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                  >
+                    <span className="text-2xl text-gray-500">×</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Job Description</h3>
+                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                    {selectedJob.job.description || "No description provided."}
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Requirements</h3>
+                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                    {selectedJob.job.requirements || "No specific requirements listed."}
+                  </p>
+                </div>
+                
+                {selectedJob.job.skills && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3">Required Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedJob.job.skills.split(',').map((skill, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                          {skill.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <div className="flex justify-end gap-3">
+                  <button 
+                    onClick={() => setSelectedJob(null)}
+                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                  >
+                    Close
+                  </button>
+                  {/* <button 
+                    onClick={() => handleApply(selectedJob)}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                  >
+                    {isApplied(selectedJob.id) ? "Already Applied" : "Apply Now"}
+                  </button> */}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
-
+//
 export default JobSeekerApplications;

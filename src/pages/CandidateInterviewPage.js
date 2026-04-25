@@ -119,7 +119,7 @@ function CandidateInterviewPage() {
 
   const handleAutoSubmit = async () => {
     if (Object.keys(answers).length === 0) {
-      alert("Time's up! No answers submitted.");
+      toast.error("Time's up! No answers submitted.");
       return;
     }
     
@@ -141,7 +141,7 @@ function CandidateInterviewPage() {
       }));
 
       await submitAllAnswers(interviewId, formattedAnswers);
-      alert("Answers submitted successfully! HR will review them.");
+      toast.success("Answers submitted successfully! HR will review them.");
       navigate(`/interview/${interviewId}/result`);
       
     } catch (err) {
