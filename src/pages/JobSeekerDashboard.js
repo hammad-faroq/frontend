@@ -668,7 +668,7 @@ function JobSeekerDashboard() {
                   <div className="js-empty-icon" style={{ background: "#f0fdf4" }}>
                     <CalendarIcon style={{ width: 28, height: 28, color: "#15803d" }} />
                   </div>
-                  <h3 className="js-empty-title">No Upcoming Interviews</h3>
+                  <h3 className="js-empty-title"> Click View All to get the Interview Details</h3>
                   <p className="js-empty-desc">Apply to jobs to get interview invitations</p>
                 </div>
               ) : (
@@ -752,19 +752,21 @@ function JobSeekerDashboard() {
               )}
             </div>
 
+            
             {/* Career Insights */}
             <div className="js-card">
-              <div className="js-card-header js-analysis-header">
+              <div className="js-card-header">
                 <div>
                   <h2 className="js-card-title">Career Insights</h2>
-                  <p className="js-card-sub">Based on your resume analysis</p>
+                  <p className="js-card-sub">
+                        Based on your<br />
+                        resume analysis
+                      </p>
                 </div>
-                {analysis && (
-                  <button onClick={() => navigate("/jobseeker/analysis")} className="js-pill-btn" style={{ background: "#f0fdf4", color: "#15803d" }}>
-                    <EyeIcon style={{ width: 14, height: 14 }} />
-                    Full Analysis
-                  </button>
-                )}
+                <button onClick={() => navigate("/jobseeker/analysis")} className="js-pill-btn" style={{ background: "#f0fdf4", color: "#15803d" }}>
+                  <EyeIcon style={{ width: 14, height: 14 }} />
+                  Full Analysis
+                </button>
               </div>
               {!analysis ? (
                 <div className="js-empty">

@@ -223,9 +223,9 @@ function NotificationsPage() {
               <button className="np-btn np-btn--outline" onClick={handleRefresh} disabled={isRefreshing}>
                 <ArrowPathIcon style={{width:15,height:15,animation:isRefreshing?"np-spin .8s linear infinite":undefined}}/>{isRefreshing?"Refreshing…":"Refresh"}
               </button>
-              {unreadCount > 0 && (
+              {/* {unreadCount > 0 && (
                 <button className="np-btn np-btn--green" onClick={markAllAsRead}><CheckCircleIcon/>Mark All Read</button>
-              )}
+              )} */}
             </div>
           </div>
         </div>

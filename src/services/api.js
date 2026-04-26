@@ -2,7 +2,7 @@ import axios from "axios";
 const IS_PRODUCTION = false;
 
 const BASE_URL = IS_PRODUCTION
-  ? "https://backendfyp-production-00a3.up.railway.app"
+  ? "https://tallent-match-ai.vercel.app/"
   : "http://127.0.0.1:8000";
 
 const BASE_API_URL = `${BASE_URL}`;
@@ -32,19 +32,50 @@ const getAuthHeaders = () => {
   };
 };
 
-// 🔐 Handle 401 or expired tokens automatically
 const handleUnauthorized = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user_role");
   localStorage.removeItem("is_superuser");
-  // window.location.href = "/login"; // redirect to login
 };
 
-// 🔐 Require auth before accessing secure pages
 export const requireAuth = () => {
   const token = localStorage.getItem("token");
   if (!token) {
     window.location.href = "/login";
+  }
+};
+
+/* ---------------- OTP ---------------- */
+
+// ✅ FIXED: was using API_BASE which doesn't exist — now uses BASE_URL
+export const sendOtp = async (email) => {
+  try {
+    const res = await fetch(`${BASE_URL}/accounts/send-otp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, status: res.status, ...data };
+  } catch (error) {
+    console.error("sendOtp error:", error);
+    throw new Error("Network error. Please check your connection.");
+  }
+};
+
+// ✅ FIXED: was using API_BASE which doesn't exist — now uses BASE_URL
+export const verifyOtp = async (email, otp) => {
+  try {
+    const res = await fetch(`${BASE_URL}/accounts/verify-otp/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
+    const data = await res.json();
+    return { ok: res.ok, status: res.status, ...data };
+  } catch (error) {
+    console.error("verifyOtp error:", error);
+    throw new Error("Network error. Please check your connection.");
   }
 };
 
@@ -61,7 +92,6 @@ export const loginUser = async (email, password) => {
     const data = await response.json();
 
     if (response.ok) {
-      // ✅ Store all essential info in localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("user_role", data.role);
@@ -105,7 +135,6 @@ export const checkAccountStatus = async (email) => {
   }
 };
 
-// ✅ Dashboard protected endpoint
 export const getDashboard = async () => {
   try {
     const response = await fetch(`${BASE_URL}/accounts/dashboard/`, {
@@ -123,7 +152,6 @@ export const getDashboard = async () => {
   }
 };
 
-// ✅ Logout API
 export const logoutUser = async () => {
   const token = localStorage.getItem("token");
 
@@ -167,7 +195,7 @@ export const requestPasswordReset = async (email) => {
 export const confirmPasswordReset = async (uidb64, token, password) => {
   try {
     const response = await fetch(
-      `${BASE_URL}/password-reset-confirm/${uidb64}/${token}/`,
+      `${BASE_URL}/accounts/password-reset-confirm/${uidb64}/${token}/`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -191,7 +219,6 @@ export const getUserInfo = () => ({
   isSuperuser: localStorage.getItem("is_superuser") === "true",
 });
 
-// ✅ Get logged-in user's profile
 export const getUserProfile = async () => {
   try {
     const response = await fetch(`${BASE_URL}/profile/`, {
@@ -325,9 +352,9 @@ export const getAppliedJobs = async () => {
     return [];
   }
 };
-// ---------------- HR ANALYTICS ----------------
 
-// Fetch all jobs created by the current HR
+/* ---------------- HR ANALYTICS ---------------- */
+
 export const getHRJobs = async () => {
   try {
     const response = await fetch(`${API.BASE_JOBS_URL}/list/`, {
@@ -342,7 +369,6 @@ export const getHRJobs = async () => {
   }
 };
 
-// Fetch all applications for a specific job (HR only)
 export const getJobApplications = async (jobId) => {
   try {
     const response = await fetch(`${API.BASE_JOBS_URL}/${jobId}/applications/`, {
@@ -379,9 +405,6 @@ export const getSimilarJobs = async (params = {}) => {
   }
 };
 
-
-// src/services/api.js
-
 /* ---------------- Application Status ---------------- */
 export const checkApplicationStatus = async (jobId) => {
   try {
@@ -389,31 +412,27 @@ export const checkApplicationStatus = async (jobId) => {
       method: "GET",
       headers: getAuthHeaders(),
     });
-    
+
     if (response.status === 401) handleUnauthorized();
-    
+
     if (response.ok) {
       return await response.json();
     }
-    
-    // If the endpoint doesn't exist, fallback to checking from applied jobs
+
     if (response.status === 404) {
-      console.log("Application status endpoint not found, using fallback");
       const appliedJobs = await getAppliedJobs();
-      const applied = Array.isArray(appliedJobs) 
+      const applied = Array.isArray(appliedJobs)
         ? appliedJobs.some(job => job.job_id === jobId)
         : false;
       return { applied, submitted_at: null };
     }
-    
+
     throw new Error("Failed to check application status");
   } catch (error) {
     console.error("Error checking application status:", error);
-    
-    // Fallback: Check from getAppliedJobs
     try {
       const appliedJobs = await getAppliedJobs();
-      const applied = Array.isArray(appliedJobs) 
+      const applied = Array.isArray(appliedJobs)
         ? appliedJobs.some(job => job.job_id === jobId)
         : false;
       return { applied, submitted_at: null };
@@ -427,7 +446,7 @@ export const checkApplicationStatus = async (jobId) => {
 export const getResumeAnalysis = async () => {
   const token = localStorage.getItem("token");
   if (!token) throw new Error("User not logged in");
-  
+
   try {
     const res = await axios.get(`${API.BASE_CV_URL}/resume-analysis/`, {
       headers: { Authorization: `Token ${token}` },
@@ -439,32 +458,23 @@ export const getResumeAnalysis = async () => {
   }
 };
 
+/* ---------------- INTERVIEW ---------------- */
 
-
-
-
-/* =========================================
-   1️⃣ Fetch Interview Preparation (GET)
-========================================= */
 export const getInterviewPreparation = async () => {
   try {
     const response = await fetch(
       `${API.BASE_INTERVIEW_URL}/candidate/interview-preparation/`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
+      { method: "GET", headers: getAuthHeaders() }
     );
-
     if (response.status === 401) handleUnauthorized();
     if (!response.ok) throw new Error("Failed to fetch interview preparation.");
-
     return await response.json();
   } catch (error) {
     console.error("Error fetching interview preparation:", error);
     return { count: 0, data: [] };
   }
 };
+
 export const generateMoreQuestions = async (jobId) => {
   try {
     const response = await fetch(
@@ -475,30 +485,21 @@ export const generateMoreQuestions = async (jobId) => {
         body: JSON.stringify({ job_id: jobId }),
       }
     );
-
     if (response.status === 401) handleUnauthorized();
-
     const data = await response.json();
-
-    if (!response.ok) {
-      // IMPORTANT: throw backend message
-      throw { response: { data } };
-    }
-
+    if (!response.ok) throw { response: { data } };
     return data;
   } catch (error) {
-    throw error; // IMPORTANT: don't swallow it
+    throw error;
   }
 };
+
 export const sendMockInterviewMessage = async (jobId, message) => {
   const response = await fetch(
     `${API.BASE_INTERVIEW_URL}/candidate/interview-chat/`,
     {
       method: "POST",
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
+      headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
       body: JSON.stringify({ job_id: jobId, message }),
     }
   );
@@ -506,7 +507,6 @@ export const sendMockInterviewMessage = async (jobId, message) => {
   const data = await response.json();
 
   if (!response.ok) {
-    // 🚨 attach full error info
     const error = new Error(data?.error || "Request failed");
     error.status = response.status;
     error.data = data;
@@ -515,6 +515,7 @@ export const sendMockInterviewMessage = async (jobId, message) => {
 
   return data;
 };
+
 export const startMockInterview = async (userInput) => {
   try {
     const payload = {
@@ -526,27 +527,18 @@ export const startMockInterview = async (userInput) => {
 
     const response = await fetch(
       `${API.BASE_INTERVIEW_URL}/candidate/mock-interview/`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      }
+      { method: "POST", headers: getAuthHeaders(), body: JSON.stringify(payload) }
     );
 
-    const data = await response.json(); // 🔥 ALWAYS READ JSON FIRST
-
+    const data = await response.json();
     if (response.status === 401) handleUnauthorized();
-
-    if (!response.ok) {
-      // 🔥 THROW BACKEND MESSAGE
-      throw { response: { data } };
-    }
-
+    if (!response.ok) throw { response: { data } };
     return data;
   } catch (err) {
     throw err;
   }
 };
+
 export const submitMockInterviewAnswers = async (userInput) => {
   try {
     const payload = {
@@ -557,42 +549,27 @@ export const submitMockInterviewAnswers = async (userInput) => {
 
     const response = await fetch(
       `${API.BASE_INTERVIEW_URL}/candidate/mock-interview/`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      }
+      { method: "POST", headers: getAuthHeaders(), body: JSON.stringify(payload) }
     );
 
     const data = await response.json();
-
     if (response.status === 401) handleUnauthorized();
-
-    if (!response.ok) {
-      throw { response: { data } };
-    }
-
+    if (!response.ok) throw { response: { data } };
     return data;
   } catch (err) {
     throw err;
   }
 };
 
-// Fetch results of a mock interview session
 export const getMockInterviewResults = async (sessionId) => {
   try {
     const response = await fetch(
       `${API.BASE_INTERVIEW_URL}/candidate/mock-interview-results/${sessionId}/`,
-      {
-        method: "GET",
-        headers: getAuthHeaders(),
-      }
+      { method: "GET", headers: getAuthHeaders() }
     );
-
     if (response.status === 401) handleUnauthorized();
     if (!response.ok) throw new Error("Failed to fetch mock interview results.");
-
-    return await response.json(); // { completed, results: [...] }
+    return await response.json();
   } catch (err) {
     console.error("getMockInterviewResults error:", err);
     return null;
@@ -601,10 +578,7 @@ export const getMockInterviewResults = async (sessionId) => {
 
 export const getMockInterviewProgress = async (jobId) => {
   const token = localStorage.getItem("token");
-
-  if (!token) {
-    throw new Error("User not authenticated");
-  }
+  if (!token) throw new Error("User not authenticated");
 
   const res = await fetch(
     `${API.BASE_INTERVIEW_URL}/progress/${jobId}/`,
@@ -617,12 +591,8 @@ export const getMockInterviewProgress = async (jobId) => {
     }
   );
 
-  // 🔒 Auth issues
-  if (res.status === 401 || res.status === 403) {
-    throw new Error("Unauthorized access");
-  }
+  if (res.status === 401 || res.status === 403) throw new Error("Unauthorized access");
 
-  // 📭 No progress yet
   if (res.status === 404) {
     return {
       job_id: jobId,
@@ -633,13 +603,10 @@ export const getMockInterviewProgress = async (jobId) => {
     };
   }
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch mock interview progress");
-  }
+  if (!res.ok) throw new Error("Failed to fetch mock interview progress");
 
   const data = await res.json();
 
-  // 🛡️ Normalize response (safety for UI)
   return {
     job_id: data.job_id,
     job_title: data.job_title,
