@@ -1,8 +1,8 @@
 import axios from "axios";
-const IS_PRODUCTION = false;
+const IS_PRODUCTION = true;
 
 const BASE_URL = IS_PRODUCTION
-  ? "https://tallent-match-ai.vercel.app/"
+  ? "https://backendfyp-production-ec69.up.railway.app"
   : "http://127.0.0.1:8000";
 
 const BASE_API_URL = `${BASE_URL}`;
