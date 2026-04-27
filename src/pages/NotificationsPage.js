@@ -139,7 +139,6 @@ function NotificationsPage() {
   const [search, setSearch] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  useEffect(() => { fetchNotifications(); }, []);
 
   const filteredNotifications = notifications.filter(n => {
     if (filter === "unread" && n.read) return false;

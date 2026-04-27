@@ -92,10 +92,8 @@ export const NotificationProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 150000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]); // ✅ Now only runs once since fetchNotifications is stable
+  fetchNotifications(); // fetch once on mount
+}, [fetchNotifications]);
 
   const value = {
     notifications,
