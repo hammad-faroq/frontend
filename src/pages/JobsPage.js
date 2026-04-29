@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { listJobs } from "../services/api";
+import { listJobs, getAppliedJobs } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { EyeIcon, MagnifyingGlassIcon, MapPinIcon, CalendarIcon, BriefcaseIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { getAppliedJobs } from "../services/api";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -92,29 +91,47 @@ function JobsPage() {
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLocation, setFilterLocation] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [appliedJobs, setAppliedJobs] = useState([]);
   const { role } = useAuth();
   const navigate = useNavigate();
-  const [appliedJobs, setAppliedJobs] = useState([]);
 
+  const isExpired = d => {
+    if (!d) return false;
+    const dl = new Date(d);
+    dl.setHours(23, 59, 59, 999);
+    return dl < new Date();
+  };
+
+  // ✅ Single useEffect — loads both together, no race condition
   useEffect(() => {
-    getAppliedJobs().then(res => setAppliedJobs(res.applied_jobs || [])).catch(() => {});
-  }, []);
-
-  const isExpired = d => { if (!d) return false; const dl = new Date(d); dl.setHours(23,59,59,999); return dl < new Date(); };
-
-  useEffect(() => {
-    listJobs()
-      .then(data => { const v = Array.isArray(data) ? data : []; setJobs(v); setFilteredJobs(v); })
-      .catch(() => setError("Failed to fetch jobs."))
-      .finally(() => setLoading(false));
+    Promise.all([listJobs(), getAppliedJobs()])
+  .then(([jobsData, appliedData]) => {
+    const v = Array.isArray(jobsData) ? jobsData : [];
+    
+    // appliedData IS the array directly, not appliedData.applied_jobs
+    const appliedArray = Array.isArray(appliedData) ? appliedData : (appliedData.applied_jobs || []);
+    const jobIds = appliedArray.map(item => item.job.id);
+    
+    setJobs(v);
+    setFilteredJobs(v);
+    setAppliedJobs(jobIds);
+  })
+  .catch(() => setError("Failed to fetch jobs."))
+  .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     let r = jobs.filter(j => !isExpired(j.application_deadline));
-    if (searchTerm) r = r.filter(j => j.title.toLowerCase().includes(searchTerm.toLowerCase()) || j.company_name.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (searchTerm) r = r.filter(j =>
+      j.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      j.company_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
     if (filterLocation !== "All") r = r.filter(j => j.location === filterLocation);
+    if (filterStatus === "Applied") r = r.filter(j => appliedJobs.includes(j.id));
+    if (filterStatus === "Not Applied") r = r.filter(j => !appliedJobs.includes(j.id));
     setFilteredJobs(r);
-  }, [searchTerm, filterLocation, jobs]);
+  }, [searchTerm, filterLocation, filterStatus, jobs, appliedJobs]);
 
   const uniqueLocations = ["All", ...new Set(jobs.map(j => j.location).filter(Boolean))];
 
@@ -141,6 +158,11 @@ function JobsPage() {
           </div>
           <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="jp-select">
             {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="jp-select">
+            <option value="All">All Applications</option>
+            <option value="Applied">✓ Applied</option>
+            <option value="Not Applied">Not Applied</option>
           </select>
         </div>
       </div>
