@@ -87,6 +87,8 @@ const styles = `
   .jsj-btn--ghost:hover { background: #eef2ff; }
   .jsj-btn--primary { background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,.2); }
   .jsj-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,70,229,.3); }
+  .jsj-btn--applied { background: #f0fdf4; border: 1px solid #bbf7d0; color: #15803d; cursor: default; }
+  .jsj-btn--applied:hover { transform: none; box-shadow: none; }
 
   /* Empty */
   .jsj-empty { grid-column: 1/-1; text-align: center; padding: 60px 20px; background: #fff; border: 1px solid #e0e7ff; border-radius: 16px; }
@@ -98,7 +100,7 @@ const styles = `
   .jsj-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
   .jsj-modal { background: #fff; border: 1px solid #e0e7ff; border-radius: 20px; box-shadow: 0 24px 72px rgba(99,102,241,.18); max-width: 640px; width: 100%; max-height: 90vh; overflow-y: auto; animation: jsj-modal-in .25s ease; }
   @keyframes jsj-modal-in { from{opacity:0;transform:scale(.96)} to{opacity:1;transform:scale(1)} }
-  .jsj-modal-head { padding: 24px 24px 0; border-bottom: 1px solid #e0e7ff; padding-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .jsj-modal-head { padding: 24px 24px 18px; border-bottom: 1px solid #e0e7ff; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .jsj-modal-title { font-family: 'Syne',sans-serif; font-size: 22px; font-weight: 800; color: #1e1b3a; margin: 0 0 4px; }
   .jsj-modal-company { font-size: 15px; color: #4f46e5; font-weight: 600; }
   .jsj-modal-close { width: 32px; height: 32px; border-radius: 50%; border: none; background: #f3f4f6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #6b7280; transition: all .2s; flex-shrink: 0; }
@@ -122,7 +124,7 @@ const styles = `
 function JobSeekerJobs() {
   const { role } = useAuth();
   const [jobs, setJobs] = useState([]);
-  const [appliedJobs, setAppliedJobs] = useState([]);
+  const [appliedJobs, setAppliedJobs] = useState([]); // always a flat array of job ids e.g. [1, 4, 7]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedJob, setSelectedJob] = useState(null);
@@ -136,28 +138,62 @@ function JobSeekerJobs() {
       setLoading(true);
       const [jobsData, appliedData] = await Promise.all([listJobs(), getAppliedJobs()]);
       setJobs(Array.isArray(jobsData) ? jobsData : []);
-      setAppliedJobs(Array.isArray(appliedData) ? appliedData : []);
-    } catch { setError("Failed to load jobs. Please try refreshing."); }
-    finally { setLoading(false); }
+
+      // getAppliedJobs() can return two different shapes depending on which endpoint:
+      // Shape A — user_applied_jobs:  { applied_jobs: [1, 4, 7] }
+      // Shape B — list_applied_jobs:  [ { job: { id: 1 }, ... }, ... ]
+      if (Array.isArray(appliedData)) {
+        // Shape B — extract the nested job ids
+        setAppliedJobs(appliedData.map(a => a.job?.id).filter(Boolean));
+      } else if (appliedData?.applied_jobs) {
+        // Shape A — already a flat id list
+        setAppliedJobs(appliedData.applied_jobs);
+      } else {
+        setAppliedJobs([]);
+      }
+    } catch {
+      setError("Failed to load jobs. Please try refreshing.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isApplied = (jobId) => appliedJobs.some(a => a.job_id === jobId);
+  // appliedJobs is always a flat id array so includes() works reliably
+  const isApplied = (jobId) => appliedJobs.includes(jobId);
 
   const filteredJobs = jobs.filter(job => {
     if (filters.search) {
       const s = filters.search.toLowerCase();
-      if (!job.title?.toLowerCase().includes(s) && !job.company_name?.toLowerCase().includes(s) && !job.description?.toLowerCase().includes(s)) return false;
+      if (
+        !job.title?.toLowerCase().includes(s) &&
+        !job.company_name?.toLowerCase().includes(s) &&
+        !job.description?.toLowerCase().includes(s)
+      ) return false;
     }
     if (filters.type !== "all" && job.type !== filters.type) return false;
     if (filters.location && !job.location?.toLowerCase().includes(filters.location.toLowerCase())) return false;
     return true;
   });
 
-  const appliedCount = jobs.filter(j=>isApplied(j.id)).length;
+  const appliedCount = jobs.filter(j => isApplied(j.id)).length;
 
   if (loading) return (
-    <div className="jsj-wrap"><style>{styles}</style>
-      <div className="jsj-loading"><div className="jsj-spinner"/><p style={{color:"#6366f1",fontWeight:500}}>Loading jobs…</p></div>
+    <div className="jsj-wrap">
+      <style>{styles}</style>
+      <div className="jsj-loading">
+        <div className="jsj-spinner"/>
+        <p style={{color:"#6366f1",fontWeight:500}}>Loading jobs…</p>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div className="jsj-wrap">
+      <style>{styles}</style>
+      <div className="jsj-loading">
+        <p style={{color:"#ef4444",fontWeight:500}}>{error}</p>
+        <button className="jsj-btn jsj-btn--ghost" onClick={fetchData}>Retry</button>
+      </div>
     </div>
   );
 
@@ -165,47 +201,74 @@ function JobSeekerJobs() {
     <div className="jsj-wrap">
       <style>{styles}</style>
 
-      {/* Hero */}
+      {/* ── Hero ── */}
       <div className="jsj-hero">
-        <div className="jsj-blob jsj-blob--1"/><div className="jsj-blob jsj-blob--2"/><div className="jsj-grid-bg"/>
+        <div className="jsj-blob jsj-blob--1"/>
+        <div className="jsj-blob jsj-blob--2"/>
+        <div className="jsj-grid-bg"/>
         <div className="jsj-hero-inner">
           <h1 className="jsj-hero-title">Browse Jobs</h1>
           <p className="jsj-hero-sub">Find your next career opportunity from {jobs.length} positions</p>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* ── Stats strip ── */}
       <div className="jsj-stats-strip">
         <div className="jsj-stats-inner">
           <div className="jsj-stat">
-            <div className="jsj-stat-icon" style={{background:"#eef2ff"}}><BriefcaseIcon style={{color:"#4f46e5"}}/></div>
-            <div><div className="jsj-stat-label">Total Jobs</div><div className="jsj-stat-val">{jobs.length}</div></div>
+            <div className="jsj-stat-icon" style={{background:"#eef2ff"}}>
+              <BriefcaseIcon style={{color:"#4f46e5"}}/>
+            </div>
+            <div>
+              <div className="jsj-stat-label">Total Jobs</div>
+              <div className="jsj-stat-val">{jobs.length}</div>
+            </div>
           </div>
           <div className="jsj-stat">
-            <div className="jsj-stat-icon" style={{background:"#f0fdf4"}}><CheckCircleIcon style={{color:"#16a34a"}}/></div>
-            <div><div className="jsj-stat-label">Applied</div><div className="jsj-stat-val">{appliedCount}</div></div>
+            <div className="jsj-stat-icon" style={{background:"#f0fdf4"}}>
+              <CheckCircleIcon style={{color:"#16a34a"}}/>
+            </div>
+            <div>
+              <div className="jsj-stat-label">Applied</div>
+              <div className="jsj-stat-val">{appliedCount}</div>
+            </div>
           </div>
           <div className="jsj-stat">
-            <div className="jsj-stat-icon" style={{background:"#f5f3ff"}}><FunnelIcon style={{color:"#7c3aed"}}/></div>
-            <div><div className="jsj-stat-label">Filtered</div><div className="jsj-stat-val">{filteredJobs.length}</div></div>
+            <div className="jsj-stat-icon" style={{background:"#f5f3ff"}}>
+              <FunnelIcon style={{color:"#7c3aed"}}/>
+            </div>
+            <div>
+              <div className="jsj-stat-label">Filtered</div>
+              <div className="jsj-stat-val">{filteredJobs.length}</div>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="jsj-main">
-        {/* Filters */}
+
+        {/* ── Filters ── */}
         <div className="jsj-filter-card">
           <div className="jsj-filter-grid">
             <div className="jsj-field">
               <label>Search</label>
               <div className="jsj-input-wrap">
                 <MagnifyingGlassIcon/>
-                <input className="jsj-input" placeholder="Job title, company, or keywords" value={filters.search} onChange={e=>setFilters({...filters,search:e.target.value})}/>
+                <input
+                  className="jsj-input"
+                  placeholder="Job title, company, or keywords"
+                  value={filters.search}
+                  onChange={e => setFilters({...filters, search: e.target.value})}
+                />
               </div>
             </div>
             <div className="jsj-field">
               <label>Job Type</label>
-              <select className="jsj-select" value={filters.type} onChange={e=>setFilters({...filters,type:e.target.value})}>
+              <select
+                className="jsj-select"
+                value={filters.type}
+                onChange={e => setFilters({...filters, type: e.target.value})}
+              >
                 <option value="all">All Types</option>
                 <option value="full_time">Full-time</option>
                 <option value="part_time">Part-time</option>
@@ -218,17 +281,32 @@ function JobSeekerJobs() {
               <label>Location</label>
               <div className="jsj-input-wrap">
                 <MapPinIcon/>
-                <input className="jsj-input" placeholder="City or country" value={filters.location} onChange={e=>setFilters({...filters,location:e.target.value})}/>
+                <input
+                  className="jsj-input"
+                  placeholder="City or country"
+                  value={filters.location}
+                  onChange={e => setFilters({...filters, location: e.target.value})}
+                />
               </div>
             </div>
-            <button className="jsj-clear-btn" onClick={()=>setFilters({search:"",type:"all",location:""})}><XMarkIcon/>Clear</button>
+            <button
+              className="jsj-clear-btn"
+              onClick={() => setFilters({search:"", type:"all", location:""})}
+            >
+              <XMarkIcon/>Clear
+            </button>
           </div>
         </div>
 
-        {/* Grid */}
+        {/* ── Section heading ── */}
         <h2 className="jsj-section-title">
-          {filters.search||filters.location||filters.type!=="all" ? `${filteredJobs.length} result${filteredJobs.length!==1?"s":""} found` : "All Open Positions"}
+          {filters.search || filters.location || filters.type !== "all"
+            ? `${filteredJobs.length} result${filteredJobs.length !== 1 ? "s" : ""} found`
+            : "All Open Positions"
+          }
         </h2>
+
+        {/* ── Jobs grid ── */}
         <div className="jsj-jobs-grid">
           {filteredJobs.length === 0 ? (
             <div className="jsj-empty">
@@ -240,20 +318,44 @@ function JobSeekerJobs() {
             <div key={job.id} className="jsj-card" style={{animationDelay:`${i*40}ms`}}>
               <div className="jsj-card-head">
                 <div className="jsj-card-icon"><BriefcaseIcon/></div>
-                {isApplied(job.id) && <span className="jsj-applied-badge"><CheckCircleIcon/>Applied</span>}
+                {isApplied(job.id) && (
+                  <span className="jsj-applied-badge">
+                    <CheckCircleIcon/>Applied
+                  </span>
+                )}
               </div>
               <h3 className="jsj-card-title">{job.title}</h3>
               <p className="jsj-card-company">{job.company_name}</p>
               <div className="jsj-card-chips">
                 {job.location && <span className="jsj-chip"><MapPinIcon/>{job.location}</span>}
                 {job.type && <span className="jsj-chip"><ClockIcon/>{job.type}</span>}
-                {(job.salary||job.salary_range) && <span className="jsj-chip"><CurrencyDollarIcon/>{job.salary||job.salary_range}</span>}
+                {(job.salary || job.salary_range) && (
+                  <span className="jsj-chip"><CurrencyDollarIcon/>{job.salary || job.salary_range}</span>
+                )}
               </div>
               <p className="jsj-card-desc">{job.description || "No description available."}</p>
               <div className="jsj-card-footer">
-                <button className="jsj-btn jsj-btn--ghost" onClick={()=>setSelectedJob(job)}>View Details</button>
+                <button
+                  className="jsj-btn jsj-btn--ghost"
+                  onClick={() => setSelectedJob(job)}
+                >
+                  View Details
+                </button>
+
                 {role?.toLowerCase() !== "hr" && (
-                  <button className="jsj-btn jsj-btn--primary" onClick={()=>navigate(`/apply/${job.id}`)}>Apply Now</button>
+                  isApplied(job.id)
+                    ? (
+                      <button className="jsj-btn jsj-btn--applied" disabled>
+                        ✓ Already Applied
+                      </button>
+                    ) : (
+                      <button
+                        className="jsj-btn jsj-btn--primary"
+                        onClick={() => navigate(`/apply/${job.id}`)}
+                      >
+                        Apply Now
+                      </button>
+                    )
                 )}
               </div>
             </div>
@@ -261,22 +363,34 @@ function JobSeekerJobs() {
         </div>
       </div>
 
-      {/* Detail Modal */}
+      {/* ── Detail Modal ── */}
       {selectedJob && (
-        <div className="jsj-modal-overlay" onClick={()=>setSelectedJob(null)}>
-          <div className="jsj-modal" onClick={e=>e.stopPropagation()}>
+        <div className="jsj-modal-overlay" onClick={() => setSelectedJob(null)}>
+          <div className="jsj-modal" onClick={e => e.stopPropagation()}>
+
             <div className="jsj-modal-head">
               <div>
                 <h2 className="jsj-modal-title">{selectedJob.title}</h2>
-                <p className="jsj-modal-company">{selectedJob.company_name} · {selectedJob.location}</p>
+                <p className="jsj-modal-company">
+                  {selectedJob.company_name}
+                  {selectedJob.location ? ` · ${selectedJob.location}` : ""}
+                </p>
               </div>
-              <button className="jsj-modal-close" onClick={()=>setSelectedJob(null)}>✕</button>
+              <button className="jsj-modal-close" onClick={() => setSelectedJob(null)}>✕</button>
             </div>
+
             <div className="jsj-modal-body">
               <div className="jsj-card-chips" style={{marginBottom:16}}>
-                {selectedJob.type && <span className="jsj-chip"><ClockIcon/>{selectedJob.type}</span>}
-                {(selectedJob.salary||selectedJob.salary_range) && <span className="jsj-chip"><CurrencyDollarIcon/>{selectedJob.salary||selectedJob.salary_range}</span>}
+                {selectedJob.type && (
+                  <span className="jsj-chip"><ClockIcon/>{selectedJob.type}</span>
+                )}
+                {(selectedJob.salary || selectedJob.salary_range) && (
+                  <span className="jsj-chip">
+                    <CurrencyDollarIcon/>{selectedJob.salary || selectedJob.salary_range}
+                  </span>
+                )}
               </div>
+
               {selectedJob.description && (
                 <>
                   <h3 className="jsj-modal-section-title">Job Description</h3>
@@ -293,17 +407,39 @@ function JobSeekerJobs() {
                 <>
                   <h3 className="jsj-modal-section-title">Required Skills</h3>
                   <div className="jsj-skills-wrap">
-                    {selectedJob.skills.split(',').map((s,i)=><span key={i} className="jsj-skill-tag">{s.trim()}</span>)}
+                    {selectedJob.skills.split(',').map((s, i) => (
+                      <span key={i} className="jsj-skill-tag">{s.trim()}</span>
+                    ))}
                   </div>
                 </>
               )}
             </div>
+
             <div className="jsj-modal-footer">
-              <button className="jsj-btn jsj-btn--ghost" onClick={()=>setSelectedJob(null)}>Close</button>
+              <button
+                className="jsj-btn jsj-btn--ghost"
+                onClick={() => setSelectedJob(null)}
+              >
+                Close
+              </button>
+
               {role?.toLowerCase() !== "hr" && (
-                <button className="jsj-btn jsj-btn--primary" onClick={()=>navigate(`/apply/${selectedJob.id}`)}>Apply Now</button>
+                isApplied(selectedJob.id)
+                  ? (
+                    <button className="jsj-btn jsj-btn--applied" disabled>
+                      ✓ Already Applied
+                    </button>
+                  ) : (
+                    <button
+                      className="jsj-btn jsj-btn--primary"
+                      onClick={() => navigate(`/apply/${selectedJob.id}`)}
+                    >
+                      Apply Now
+                    </button>
+                  )
               )}
             </div>
+
           </div>
         </div>
       )}
