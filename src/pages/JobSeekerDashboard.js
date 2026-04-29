@@ -130,7 +130,6 @@ function JobSeekerDashboard() {
     setError("");
 
     const token = localStorage.getItem("token");
-
     if (!token) {
       setError("Please login to continue");
       return;
@@ -144,7 +143,6 @@ function JobSeekerDashboard() {
           "Content-Type": "application/json",
         },
       });
-
       if (res.ok) {
         const data = await res.json();
         setUserName(data.first_name || data.name || "");
@@ -153,7 +151,7 @@ function JobSeekerDashboard() {
       console.log(err);
     }
 
-    /* ---------------- JOBS + APPLICATIONS ---------------- */
+    /* ---------------- JOBS + APPLICATIONS + ANALYSIS + MATCHES (all parallel) ---------------- */
     const [jobsData, appliedData] = await Promise.all([
       listJobs().catch(() => []),
       getAppliedJobs().catch(() => []),
@@ -162,7 +160,7 @@ function JobSeekerDashboard() {
     setJobs(Array.isArray(jobsData) ? jobsData : []);
     setAppliedJobs(Array.isArray(appliedData) ? appliedData : []);
 
-    /* ---------------- ANALYSIS + MATCHES ---------------- */
+    // Fire-and-forget — don't await, won't block interview prep
     Promise.allSettled([
       getResumeAnalysis().catch(() => null),
       getSimilarJobs().catch(() => ({ matched_jobs: [] })),
@@ -170,86 +168,41 @@ function JobSeekerDashboard() {
       if (analysisResult.status === "fulfilled") {
         setAnalysis(analysisResult.value || null);
       }
-
       if (similarJobsResult.status === "fulfilled") {
-        setMatchedJobs(
-          similarJobsResult.value.matched_jobs || []
-        );
+        setMatchedJobs(similarJobsResult.value?.matched_jobs || []);
       }
     });
 
-    /* ---------------- INTERVIEW PREP CACHE ---------------- */
+    /* ---------------- INTERVIEW PREP (fixed cache logic) ---------------- */
     setLoading((prev) => ({ ...prev, interviewPrep: true }));
 
     try {
-      const cachedData = localStorage.getItem(
-        "interview_prep_cache"
-      );
-
-      const cacheTime = localStorage.getItem(
-        "interview_prep_timestamp"
-      );
-
-      const age = cacheTime
-        ? Date.now() - parseInt(cacheTime)
-        : Infinity;
-
+      const cachedData = localStorage.getItem("interview_prep_cache");
+      const cacheTime = localStorage.getItem("interview_prep_timestamp");
+      const age = cacheTime ? Date.now() - parseInt(cacheTime) : Infinity;
       const TWENTY_MINUTES = 1000 * 60 * 20;
-      const THIRTY_MINUTES = 1000 * 60 * 30;
 
-      /* PAGE LOAD:
-         Use cache if under 30 mins */
-      if (cachedData && age < THIRTY_MINUTES) {
+      // Show cache immediately if available (any age)
+      if (cachedData) {
         setInterviewPrep(JSON.parse(cachedData));
         updateLastUpdated();
-      } else {
-        const response = await getInterviewPreparation();
-
-        if (response?.data) {
-          setInterviewPrep(response.data);
-
-          localStorage.setItem(
-            "interview_prep_cache",
-            JSON.stringify(response.data)
-          );
-
-          localStorage.setItem(
-            "interview_prep_timestamp",
-            Date.now().toString()
-          );
-
-          updateLastUpdated();
-        }
       }
 
-      /* AUTO REFRESH AFTER 20 MINUTES */
-      if (age >= TWENTY_MINUTES) {
-        const freshResponse =
-          await getInterviewPreparation();
-
-        if (freshResponse?.data) {
-          setInterviewPrep(freshResponse.data);
-
-          localStorage.setItem(
-            "interview_prep_cache",
-            JSON.stringify(freshResponse.data)
-          );
-
-          localStorage.setItem(
-            "interview_prep_timestamp",
-            Date.now().toString()
-          );
-
+      // Only hit the API if cache is missing OR stale (> 20 mins)
+      // This replaces the old two-block logic that caused double calls
+      if (!cachedData || age >= TWENTY_MINUTES) {
+        const response = await getInterviewPreparation();
+        if (response?.data) {
+          setInterviewPrep(response.data);
+          localStorage.setItem("interview_prep_cache", JSON.stringify(response.data));
+          localStorage.setItem("interview_prep_timestamp", Date.now().toString());
           updateLastUpdated();
         }
       }
     } catch (err) {
       console.log(err);
     } finally {
-      setLoading((prev) => ({
-        ...prev,
-        interviewPrep: false,
-      }));
+      setLoading((prev) => ({ ...prev, interviewPrep: false }));
     }
 
     setRefreshing(false);
@@ -257,10 +210,7 @@ function JobSeekerDashboard() {
     console.log(error);
     setError("Failed to load dashboard");
   } finally {
-    setLoading((prev) => ({
-      ...prev,
-      page: false,
-    }));
+    setLoading((prev) => ({ ...prev, page: false }));
   }
 }, []);
 

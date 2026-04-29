@@ -1,5 +1,5 @@
 import axios from "axios";
-const IS_PRODUCTION = true;
+const IS_PRODUCTION = false;
 
 const BASE_URL = IS_PRODUCTION
   ? "https://backendfyp-production-ec69.up.railway.app"

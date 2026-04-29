@@ -176,7 +176,7 @@ function MatchesPage() {
         const jobs = Array.isArray(response.matched_jobs) ? response.matched_jobs : Array.isArray(response) ? response : [];
         if (jobs.length > 0) {
           setMatchedJobs(jobs);
-          if (isRefresh) { setSuccessMessage(`✅ Found ${jobs.length} matching jobs!`); setTimeout(()=>setSuccessMessage(""),3000); }
+          if (isRefresh) { setSuccessMessage(`✅ Found ${jobs.length} matching jobs!`); setTimeout(() => setSuccessMessage(""), 3000); }
         } else {
           setError(response.message || "No matching jobs found."); setMatchedJobs([]);
         }
@@ -191,6 +191,7 @@ function MatchesPage() {
 
   useEffect(() => { fetchMatchedJobs(); }, [fetchMatchedJobs]);
 
+  // FIXED: a.job?.id === job.job_id (applied jobs have job as nested object)
   const filteredAndSortedJobs = React.useMemo(() => {
     let filtered = matchedJobs.filter(job => {
       if (searchTerm) {
@@ -199,12 +200,12 @@ function MatchesPage() {
       }
       return true;
     });
-    if (filter === "unapplied") filtered = filtered.filter(job => !appliedJobs.some(a => a.job_id === job.job_id));
-    else if (filter === "applied") filtered = filtered.filter(job => appliedJobs.some(a => a.job_id === job.job_id));
-    filtered.sort((a,b) => {
-      const sA = a.score||a.match_score||0, sB = b.score||b.match_score||0;
+    if (filter === "unapplied") filtered = filtered.filter(job => !appliedJobs.some(a => a.job?.id === job.job_id));
+    else if (filter === "applied") filtered = filtered.filter(job => appliedJobs.some(a => a.job?.id === job.job_id));
+    filtered.sort((a, b) => {
+      const sA = a.score || a.match_score || 0, sB = b.score || b.match_score || 0;
       if (sortBy === "score") return sB - sA;
-      if (sortBy === "title") return (a.title||"").localeCompare(b.title||"");
+      if (sortBy === "title") return (a.title || "").localeCompare(b.title || "");
       return sB - sA;
     });
     return filtered;
@@ -213,12 +214,13 @@ function MatchesPage() {
   const getScoreClass = (pct) => pct >= 80 ? "green" : pct >= 50 ? "yellow" : pct >= 25 ? "orange" : "red";
   const getScoreLabel = (pct) => pct >= 80 ? "Excellent Match" : pct >= 50 ? "Good Match" : pct >= 25 ? "Fair Match" : "Low Match";
 
-  const unappliedCount = matchedJobs.filter(j=>!appliedJobs.some(a=>a.job_id===j.job_id)).length;
-  const appliedCount = matchedJobs.filter(j=>appliedJobs.some(a=>a.job_id===j.job_id)).length;
+  // FIXED: a.job?.id === j.job_id
+  const unappliedCount = matchedJobs.filter(j => !appliedJobs.some(a => a.job?.id === j.job_id)).length;
+  const appliedCount = matchedJobs.filter(j => appliedJobs.some(a => a.job?.id === j.job_id)).length;
 
   if (loading) return (
     <div className="mp-wrap"><style>{styles}</style>
-      <div className="mp-loading"><div className="mp-spinner"/><p style={{color:"#6366f1",fontWeight:500}}>Finding your matches…</p></div>
+      <div className="mp-loading"><div className="mp-spinner" /><p style={{ color: "#6366f1", fontWeight: 500 }}>Finding your matches…</p></div>
     </div>
   );
 
@@ -228,18 +230,18 @@ function MatchesPage() {
 
       {/* Hero */}
       <div className="mp-hero">
-        <div className="mp-blob mp-blob--1"/><div className="mp-blob mp-blob--2"/><div className="mp-grid"/>
+        <div className="mp-blob mp-blob--1" /><div className="mp-blob mp-blob--2" /><div className="mp-grid" />
         <div className="mp-hero-inner">
           <div className="mp-hero-top">
             <h1 className="mp-hero-title">Your Job Matches</h1>
             <p className="mp-hero-sub">Jobs tailored to your skills and experience</p>
           </div>
           <div className="mp-hero-actions">
-            <button className="mp-action-btn mp-action-btn--outline" onClick={()=>fetchMatchedJobs(true)} disabled={refreshing}>
-              <ArrowPathIcon style={{width:15,height:15,animation:refreshing?"mp-spin .8s linear infinite":undefined}}/>{refreshing?"Refreshing…":"Refresh"}
+            <button className="mp-action-btn mp-action-btn--outline" onClick={() => fetchMatchedJobs(true)} disabled={refreshing}>
+              <ArrowPathIcon style={{ width: 15, height: 15, animation: refreshing ? "mp-spin .8s linear infinite" : undefined }} />{refreshing ? "Refreshing…" : "Refresh"}
             </button>
-            <button className="mp-action-btn mp-action-btn--primary" onClick={()=>navigate("/jobseeker/upload-resume")}>
-              <DocumentArrowUpIcon/>Upload Resume
+            <button className="mp-action-btn mp-action-btn--primary" onClick={() => navigate("/jobseeker/upload-resume")}>
+              <DocumentArrowUpIcon />Upload Resume
             </button>
           </div>
         </div>
@@ -249,15 +251,15 @@ function MatchesPage() {
       <div className="mp-stats-strip">
         <div className="mp-stats-inner">
           <div className="mp-stat-item">
-            <div className="mp-stat-icon" style={{background:"#eef2ff"}}><BriefcaseIcon style={{color:"#4f46e5"}}/></div>
+            <div className="mp-stat-icon" style={{ background: "#eef2ff" }}><BriefcaseIcon style={{ color: "#4f46e5" }} /></div>
             <div><div className="mp-stat-label">Total Matches</div><div className="mp-stat-val">{matchedJobs.length}</div></div>
           </div>
           <div className="mp-stat-item">
-            <div className="mp-stat-icon" style={{background:"#f0fdf4"}}><CheckCircleIcon style={{color:"#16a34a"}}/></div>
+            <div className="mp-stat-icon" style={{ background: "#f0fdf4" }}><CheckCircleIcon style={{ color: "#16a34a" }} /></div>
             <div><div className="mp-stat-label">Applied</div><div className="mp-stat-val">{appliedCount}</div></div>
           </div>
           <div className="mp-stat-item">
-            <div className="mp-stat-icon" style={{background:"#f5f3ff"}}><ClockIcon style={{color:"#7c3aed"}}/></div>
+            <div className="mp-stat-icon" style={{ background: "#f5f3ff" }}><ClockIcon style={{ color: "#7c3aed" }} /></div>
             <div><div className="mp-stat-label">Available</div><div className="mp-stat-val">{unappliedCount}</div></div>
           </div>
         </div>
@@ -266,19 +268,19 @@ function MatchesPage() {
       <div className="mp-main">
         {/* Filter bar */}
         <div className="mp-filter-bar">
-          <div style={{display:"flex",gap:12,flexWrap:"wrap"}}>
-            <div className="mp-search-wrap" style={{flex:1,minWidth:200}}>
-              <MagnifyingGlassIcon/>
-              <input className="mp-search-input" placeholder="Search by title, company, or location…" value={searchTerm} onChange={e=>setSearchTerm(e.target.value)}/>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <div className="mp-search-wrap" style={{ flex: 1, minWidth: 200 }}>
+              <MagnifyingGlassIcon />
+              <input className="mp-search-input" placeholder="Search by title, company, or location…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             <div className="mp-filter-row">
-              <FunnelIcon style={{width:16,height:16,color:"#6b7280"}}/>
-              <select className="mp-select" value={filter} onChange={e=>setFilter(e.target.value)}>
+              <FunnelIcon style={{ width: 16, height: 16, color: "#6b7280" }} />
+              <select className="mp-select" value={filter} onChange={e => setFilter(e.target.value)}>
                 <option value="all">All Jobs</option>
                 <option value="unapplied">Not Applied</option>
                 <option value="applied">Applied</option>
               </select>
-              <select className="mp-select" value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+              <select className="mp-select" value={sortBy} onChange={e => setSortBy(e.target.value)}>
                 <option value="score">Sort by Match</option>
                 <option value="title">Sort by Title</option>
               </select>
@@ -288,14 +290,14 @@ function MatchesPage() {
 
         {/* Messages */}
         {successMessage && (
-          <div className="mp-banner mp-banner--green"><CheckCircleIcon style={{color:"#16a34a"}}/><p>{successMessage}</p></div>
+          <div className="mp-banner mp-banner--green"><CheckCircleIcon style={{ color: "#16a34a" }} /><p>{successMessage}</p></div>
         )}
         {error && (
           <div className="mp-banner mp-banner--red">
-            <ExclamationTriangleIcon style={{color:"#dc2626"}}/>
+            <ExclamationTriangleIcon style={{ color: "#dc2626" }} />
             <div>
-              <p style={{fontWeight:600}}>{error}</p>
-              {error.includes("resume") && <button style={{fontSize:13,color:"#b91c1c",textDecoration:"underline",background:"none",border:"none",cursor:"pointer",marginTop:4}} onClick={()=>navigate("/jobseeker/upload-resume")}>Upload your resume now →</button>}
+              <p style={{ fontWeight: 600 }}>{error}</p>
+              {error.includes("resume") && <button style={{ fontSize: 13, color: "#b91c1c", textDecoration: "underline", background: "none", border: "none", cursor: "pointer", marginTop: 4 }} onClick={() => navigate("/jobseeker/upload-resume")}>Upload your resume now →</button>}
             </div>
           </div>
         )}
@@ -306,8 +308,8 @@ function MatchesPage() {
             <div className="mp-empty-emoji">📄</div>
             <h3 className="mp-empty-title">{searchTerm ? "No matching jobs found" : "No job matches yet"}</h3>
             <p className="mp-empty-sub">{searchTerm ? "Try a different search term or clear your filters." : "Upload your resume to get personalized job recommendations."}</p>
-            <button className="mp-btn mp-btn--primary" style={{width:"auto",padding:"10px 24px",margin:"0 auto"}} onClick={()=>searchTerm?(setSearchTerm(""),setFilter("all")):navigate("/jobseeker/upload-resume")}>
-              {searchTerm ? "Clear Filters" : <><DocumentArrowUpIcon/>Upload Resume</>}
+            <button className="mp-btn mp-btn--primary" style={{ width: "auto", padding: "10px 24px", margin: "0 auto" }} onClick={() => searchTerm ? (setSearchTerm(""), setFilter("all")) : navigate("/jobseeker/upload-resume")}>
+              {searchTerm ? "Clear Filters" : <><DocumentArrowUpIcon />Upload Resume</>}
             </button>
           </div>
         )}
@@ -321,43 +323,44 @@ function MatchesPage() {
             </div>
             <div className="mp-grid-cards">
               {filteredAndSortedJobs.map((job, i) => {
-                const isApplied = appliedJobs.some(a=>a.job_id===job.job_id);
+                // FIXED: a.job?.id === job.job_id
+                const isApplied = appliedJobs.some(a => a.job?.id === job.job_id);
                 const isApplying = applyingJobId === job.job_id;
-                const pct = Math.round((job.score||job.match_score||0)*100);
+                const pct = Math.round((job.score || job.match_score || 0) * 100);
                 const cls = getScoreClass(pct);
                 return (
-                  <div key={job.job_id} className="mp-card" style={{animationDelay:`${i*40}ms`}}>
+                  <div key={job.job_id} className="mp-card" style={{ animationDelay: `${i * 40}ms` }}>
                     <div className="mp-card-body">
                       <div className="mp-card-top">
-                        <h3 className="mp-card-title" onClick={()=>navigate(`/jobs/${job.job_id}`)}>{job.title}</h3>
+                        <h3 className="mp-card-title" onClick={() => navigate(`/jobs/${job.job_id}`)}>{job.title}</h3>
                         <span className={`mp-match-pill mp-match-pill--${cls}`}>{pct}% Match</span>
                       </div>
                       <div className="mp-card-meta">
-                        {job.company && <span className="mp-card-meta-item"><BuildingOfficeIcon/>{job.company}</span>}
-                        {job.location && <span className="mp-card-meta-item"><MapPinIcon/>{job.location}</span>}
+                        {job.company && <span className="mp-card-meta-item"><BuildingOfficeIcon />{job.company}</span>}
+                        {job.location && <span className="mp-card-meta-item"><MapPinIcon />{job.location}</span>}
                       </div>
                       <div className="mp-bar-wrap">
                         <div className="mp-bar-labels">
                           <span className="mp-bar-label">{getScoreLabel(pct)}</span>
                           <span className="mp-bar-val">{pct}%</span>
                         </div>
-                        <div className="mp-bar-bg"><div className={`mp-bar-fill mp-bar-fill--${cls}`} style={{width:`${Math.min(pct,100)}%`}}/></div>
+                        <div className="mp-bar-bg"><div className={`mp-bar-fill mp-bar-fill--${cls}`} style={{ width: `${Math.min(pct, 100)}%` }} /></div>
                       </div>
                       {job.description && <p className="mp-card-desc">{job.description}</p>}
-                      {(job.salary_range||job.type) && (
+                      {(job.salary_range || job.type) && (
                         <div className="mp-card-details">
                           {job.salary_range && <div><div className="mp-detail-label">Salary</div><div className="mp-detail-val">{job.salary_range}</div></div>}
                           {job.type && <div><div className="mp-detail-label">Type</div><div className="mp-detail-val">{job.type}</div></div>}
                         </div>
                       )}
                       <div className="mp-card-actions">
-                        <button className="mp-btn mp-btn--ghost" onClick={()=>navigate(`/jobs/${job.job_id}`)}><EyeIcon/>View</button>
+                        <button className="mp-btn mp-btn--ghost" onClick={() => navigate(`/jobs/${job.job_id}`)}><EyeIcon />View</button>
                         <button
-                          className={`mp-btn ${isApplied?"mp-btn--disabled":isApplying?"mp-btn--orange":"mp-btn--primary"}`}
-                          disabled={isApplied||isApplying}
-                          onClick={()=>navigate(`/apply/${job.job_id}`)}
+                          className={`mp-btn ${isApplied ? "mp-btn--disabled" : isApplying ? "mp-btn--orange" : "mp-btn--primary"}`}
+                          disabled={isApplied || isApplying}
+                          onClick={() => navigate(`/apply/${job.job_id}`)}
                         >
-                          {isApplying ? <><ArrowPathIcon style={{animation:"mp-spin .8s linear infinite"}}/>Applying…</> : isApplied ? <><CheckCircleIcon/>Applied</> : <><DocumentArrowUpIcon/>Apply Now</>}
+                          {isApplying ? <><ArrowPathIcon style={{ animation: "mp-spin .8s linear infinite" }} />Applying…</> : isApplied ? <><CheckCircleIcon />Applied</> : <><DocumentArrowUpIcon />Apply Now</>}
                         </button>
                       </div>
                     </div>
@@ -371,7 +374,7 @@ function MatchesPage() {
         {/* Tips */}
         {filteredAndSortedJobs.length > 0 && (
           <div className="mp-tips">
-            <div className="mp-tips-title"><ExclamationTriangleIcon style={{width:16,height:16}}/>Tips for better matches</div>
+            <div className="mp-tips-title"><ExclamationTriangleIcon style={{ width: 16, height: 16 }} />Tips for better matches</div>
             <ul>
               <li>Update your resume with recent skills and experiences</li>
               <li>Apply to jobs with higher match scores first</li>
