@@ -7,9 +7,12 @@ import JobModal from "./JobModal";
 
 const getJobStatus = (job) => {
   if (!job.application_deadline) return "unknown";
-  return new Date(job.application_deadline) > new Date() ? "active" : "expired";
-};
 
+  const today = new Date().toISOString().split("T")[0];
+  const deadline = job.application_deadline.split("T")[0];
+
+  return deadline >= today ? "active" : "expired";
+};
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
 
