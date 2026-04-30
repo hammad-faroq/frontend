@@ -133,23 +133,31 @@ function Login() {
     flow: "implicit",
     scope: "openid email profile",
     onSuccess: async (tokenResponse) => {
-      setIsGoogleLoading(true);
-      try {
-        const result = await googleAuth(tokenResponse.access_token);
-        if (result.ok) {
-          toast.success("Signed in with Google!");
-          login(result.token, result.role, result.is_superuser);
-          if (result.role === "hr") navigate("/hr/dashboard");
-          else navigate("/jobseeker/dashboard");
-        } else {
-          toast.error(result.error || "Google sign-in failed. Please try again.");
-        }
-      } catch {
-        toast.error("Network error. Please try again.");
-      } finally {
-        setIsGoogleLoading(false);
+    setIsGoogleLoading(true);
+    try {
+      const result = await googleAuth(tokenResponse.access_token);
+      
+      // New user — needs to pick a role, send to register
+      if (result.needs_role) {
+        toast.error("Please register first to use Google sign-in.Redirecting.. TO Register", { icon: "ℹ️" });
+        navigate("/register");
+        return;
       }
-    },
+
+      if (result.ok) {
+        toast.success("Signed in with Google!");
+        login(result.token, result.role, result.is_superuser);
+        if (result.role === "hr") navigate("/hr/dashboard");
+        else navigate("/jobseeker/dashboard");
+      } else {
+        toast.error(result.error || "Google sign-in failed. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  },
     onError: () => toast.error("Google sign-in was cancelled or failed."),
   });
 
