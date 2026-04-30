@@ -137,36 +137,36 @@ function AppContent() {
         <Route path="/help" element={<Help />} />
 
           {/* USER CORE */}
-          <Route path="/matches" element={<MatchesPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/support" element={<Support />} />
+          <Route path="/matches" element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><Support /></ProtectedRoute>} />
           
 
           {/* JOBS */}
-          <Route path="/jobs" element={<JobsPage />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
-          <Route path="/apply/:jobId" element={<JobApplicationPage />} />
-          <Route path="/applications" element={<AppliedJobsPageWrapper />} />
-          <Route path="/resume-upload" element={<ResumeUpload />} />
+          <Route path="/jobs" element={<ProtectedRoute><JobsPage /></ProtectedRoute>} />
+          <Route path="/jobs/:id" element={<ProtectedRoute><JobDetail /></ProtectedRoute>} />
+          <Route path="/apply/:jobId" element={<ProtectedRoute><JobApplicationPage /></ProtectedRoute>} />
+          <Route path="/applications" element={<ProtectedRoute><AppliedJobsPageWrapper /></ProtectedRoute>} />
+          <Route path="/resume-upload" element={<ProtectedRoute><ResumeUpload /></ProtectedRoute>} />
 
           {/* JOB SEEKER */}
           <Route path="/jobseeker/dashboard" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerDashboard /></ProtectedRoute>} />
           <Route path="/jobseeker/jobs" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerJobs /></ProtectedRoute>} />
           <Route path="/jobseeker/applications" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerApplications /></ProtectedRoute>} />
-          <Route path="/jobseeker/profile" element={<JobSeekerProfile />} />
-          <Route path="/jobseeker/settings" element={<JobSeekerSettings />} />
+          <Route path="/jobseeker/profile" element={<ProtectedRoute><JobSeekerProfile /></ProtectedRoute>} />
+          <Route path="/jobseeker/settings" element={<ProtectedRoute><JobSeekerSettings /></ProtectedRoute>} />
           <Route path="/jobseeker/analysis" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerAnalysis /></ProtectedRoute>} />
           <Route path="/jobseeker/interviews" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerInterviews /></ProtectedRoute>} />
           <Route path="/jobseeker/upload-resume" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerUploadResume /></ProtectedRoute>} />
-          <Route path="/jobseeker/similar-jobs" element={<SimilarJobs />} />
+          <Route path="/jobseeker/similar-jobs" element={<ProtectedRoute allowedRoles={["job_seeker"]}><SimilarJobs /></ProtectedRoute>} />
 
           {/* INTERVIEW */}
-          <Route path="/interviews/upcoming" element={<UpcomingInterviews />} />
-          <Route path="/interview/:interviewId" element={<InterviewPage />} />
-          <Route path="/interview/:interviewId/result" element={<InterviewResult />} />
-          <Route path="/preparation" element={<PreparationModules />} />
+          <Route path="/interviews/upcoming" element={<ProtectedRoute><UpcomingInterviews /></ProtectedRoute>} />
+          <Route path="/interview/:interviewId" element={<ProtectedRoute><InterviewPage /></ProtectedRoute>} />
+          <Route path="/interview/:interviewId/result" element={<ProtectedRoute><InterviewResult /></ProtectedRoute>} />
+          <Route path="/preparation" element={<ProtectedRoute><PreparationModules /></ProtectedRoute>} />
 
           <Route path="/jobseeker/interview-prep" element={<ProtectedRoute allowedRoles={["job_seeker"]}><InterviewPreparation /></ProtectedRoute>} />
           <Route path="/jobseeker/interview/:interviewId/start" element={<ProtectedRoute allowedRoles={["job_seeker"]}><CandidateInterviewStart /></ProtectedRoute>} />
