@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { registerUser, sendOtp, verifyOtp } from "../services/api";
+import { registerUser, sendOtp, verifyOtp, googleAuth } from "../services/api";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -58,6 +59,10 @@ const styles = `
   .reg-divider-line { flex: 1; height: 1px; background: #e0e7ff; }
   .reg-divider-text { font-size: 12px; color: #c4c7d6; font-weight: 600; }
 
+  /* ── Google Button ── */
+  .reg-google-wrap { width: 100%; display: flex; justify-content: center; }
+  .reg-google-wrap > div { width: 100% !important; }
+
   /* ── OTP Screen ── */
   .otp-icon { font-size: 48px; text-align: center; margin-bottom: 12px; }
   .otp-email-badge { display: inline-flex; align-items: center; gap: 6px; background: #eef2ff; border: 1px solid #e0e7ff; border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 600; color: #4f46e5; margin: 0 auto 24px; }
@@ -89,18 +94,18 @@ const styles = `
 `;
 
 const OTP_LENGTH = 6;
-const OTP_DURATION = 300; // 5 minutes in seconds
+const OTP_DURATION = 300;
 
 const Register = () => {
-  const [step, setStep] = useState("form"); // "form" | "otp"
+  const [step, setStep] = useState("form");
   const [formData, setFormData] = useState({
     first_name: "", last_name: "", email: "", password: "",
     confirmPassword: "", role: "job_seeker",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  // OTP state
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(""));
   const [otpError, setOtpError] = useState("");
   const [otpShake, setOtpShake] = useState(false);
@@ -113,18 +118,13 @@ const Register = () => {
   const timerRef = useRef(null);
   const navigate = useNavigate();
 
-  // ── Timer ──────────────────────────────────────────────
   const startTimer = () => {
     clearInterval(timerRef.current);
     setSecondsLeft(OTP_DURATION);
     setCanResend(false);
     timerRef.current = setInterval(() => {
       setSecondsLeft(s => {
-        if (s <= 1) {
-          clearInterval(timerRef.current);
-          setCanResend(true);
-          return 0;
-        }
+        if (s <= 1) { clearInterval(timerRef.current); setCanResend(true); return 0; }
         return s - 1;
       });
     }, 1000);
@@ -138,7 +138,6 @@ const Register = () => {
     return `${m}:${sec}`;
   };
 
-  // ── Form validation ────────────────────────────────────
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (p) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/.test(p);
   const validateName = (n) => n.trim().length >= 2 && /^[a-zA-Z\s]+$/.test(n.trim());
@@ -166,7 +165,31 @@ const Register = () => {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // ── Step 1: Submit form → send OTP ────────────────────
+  // ── Google Login ───────────────────────────────────────
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsGoogleLoading(true);
+    try {
+      const result = await googleAuth(credentialResponse.credential);
+      if (result.ok) {
+        toast.success("🎉 Signed in with Google!");
+        // Redirect based on role
+        if (result.role === "hr") navigate("/hr/dashboard");
+        else navigate("/jobseeker/dashboard");
+      } else {
+        toast.error(result.error || "Google sign-in failed. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error("Google sign-in was cancelled or failed.");
+  };
+
+  // ── Form Submit → Send OTP ─────────────────────────────
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) { toast.error("Please fix the errors below."); return; }
@@ -190,18 +213,14 @@ const Register = () => {
     }
   };
 
-  // ── OTP input handling ─────────────────────────────────
+  // ── OTP Handling ───────────────────────────────────────
   const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return; // digits only
+    if (!/^\d*$/.test(value)) return;
     const next = [...otp];
-    next[index] = value.slice(-1); // one digit max
+    next[index] = value.slice(-1);
     setOtp(next);
     setOtpError("");
-
-    if (value && index < OTP_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-    // Auto-submit when last box filled
+    if (value && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
     if (index === OTP_LENGTH - 1 && value) {
       const filled = [...next];
       if (filled.every(d => d !== "")) handleVerify(filled.join(""));
@@ -209,9 +228,7 @@ const Register = () => {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
+    if (e.key === "Backspace" && !otp[index] && index > 0) inputRefs.current[index - 1]?.focus();
     if (e.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus();
     if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
   };
@@ -227,13 +244,8 @@ const Register = () => {
     if (text.length === OTP_LENGTH) handleVerify(text);
   };
 
-  // ── Step 2: Verify OTP → register ─────────────────────
   const handleVerify = async (code) => {
-    if (secondsLeft === 0) {
-      setOtpError("OTP expired. Please request a new one.");
-      triggerShake();
-      return;
-    }
+    if (secondsLeft === 0) { setOtpError("OTP expired. Please request a new one."); triggerShake(); return; }
     setIsVerifying(true);
     setOtpError("");
     try {
@@ -244,7 +256,6 @@ const Register = () => {
         setIsVerifying(false);
         return;
       }
-      // OTP correct → register user
       const apiData = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
@@ -278,7 +289,6 @@ const Register = () => {
     setTimeout(() => setOtpShake(false), 400);
   };
 
-  // ── Resend OTP ─────────────────────────────────────────
   const handleResend = async () => {
     if (!canResend || isResending) return;
     setIsResending(true);
@@ -300,7 +310,6 @@ const Register = () => {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────
   return (
     <div className="reg-wrap">
       <style>{styles}</style>
@@ -319,30 +328,19 @@ const Register = () => {
           <>
             <h1 className="reg-title">Verify your <span>Email</span></h1>
             <p className="reg-sub">We sent a 6-digit code to your inbox</p>
-
             <div className="otp-email-wrap">
               <span className="otp-email-badge">📧 {formData.email}</span>
             </div>
-
-            {/* Timer progress bar */}
             <div className="otp-progress">
-              <div
-                className="otp-progress-bar"
-                style={{ width: `${(secondsLeft / OTP_DURATION) * 100}%` }}
-              />
+              <div className="otp-progress-bar" style={{ width: `${(secondsLeft / OTP_DURATION) * 100}%` }}/>
             </div>
-
-            {/* 6 digit boxes */}
             <div className="otp-boxes">
               {otp.map((digit, i) => (
                 <input
                   key={i}
                   ref={el => inputRefs.current[i] = el}
                   className={`otp-box${otpShake ? " otp-box--error" : ""}${digit ? " otp-box--filled" : ""}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
+                  type="text" inputMode="numeric" maxLength={1} value={digit}
                   onChange={e => handleOtpChange(i, e.target.value)}
                   onKeyDown={e => handleOtpKeyDown(i, e)}
                   onPaste={i === 0 ? handleOtpPaste : undefined}
@@ -351,49 +349,26 @@ const Register = () => {
                 />
               ))}
             </div>
-
-            {otpError && (
-              <p style={{textAlign:"center", color:"#ef4444", fontSize:"13px", margin:"6px 0 12px"}}>
-                {otpError}
-              </p>
-            )}
-
-            {/* Timer */}
+            {otpError && <p style={{textAlign:"center",color:"#ef4444",fontSize:"13px",margin:"6px 0 12px"}}>{otpError}</p>}
             <p className={`otp-timer${secondsLeft > 60 ? " otp-timer--ok" : ""}`}>
               {secondsLeft > 0
                 ? <>Code expires in <strong>{formatTime(secondsLeft)}</strong></>
                 : <strong style={{color:"#ef4444"}}>Code expired</strong>
               }
             </p>
-
-            {/* Verify button */}
-            <button
-              className="reg-submit"
-              style={{marginTop:0}}
-              onClick={handleVerifyClick}
-              disabled={isVerifying || otp.join("").length < OTP_LENGTH || secondsLeft === 0}
-            >
+            <button className="reg-submit" style={{marginTop:0}} onClick={handleVerifyClick}
+              disabled={isVerifying || otp.join("").length < OTP_LENGTH || secondsLeft === 0}>
               {isVerifying ? "Verifying..." : "Verify & Create Account →"}
             </button>
-
-            {/* Resend */}
             <div className="otp-resend-row" style={{marginTop:14}}>
-              <span style={{fontSize:"13px", color:"#9ca3af"}}>Didn't get the code? </span>
-              <button
-                className="otp-resend-btn"
-                onClick={handleResend}
-                disabled={!canResend || isResending}
-              >
+              <span style={{fontSize:"13px",color:"#9ca3af"}}>Didn't get the code? </span>
+              <button className="otp-resend-btn" onClick={handleResend} disabled={!canResend || isResending}>
                 {isResending ? "Sending..." : canResend ? "Resend OTP" : `Resend in ${formatTime(secondsLeft)}`}
               </button>
             </div>
-
-            {/* Back to form */}
-            <button
-              className="otp-back-btn"
+            <button className="otp-back-btn"
               onClick={() => { clearInterval(timerRef.current); setStep("form"); setOtpError(""); }}
-              disabled={isVerifying}
-            >
+              disabled={isVerifying}>
               ← Edit my details
             </button>
           </>
@@ -403,89 +378,19 @@ const Register = () => {
             <h1 className="reg-title">Join <span>TalentMatch</span></h1>
             <p className="reg-sub">Create your account to get started</p>
 
-            <form onSubmit={handleFormSubmit}>
-              <div className="reg-field-grid">
-                <div className="reg-field">
-                  <label>First Name *</label>
-                  <input
-                    className={`reg-input${errors.first_name ? " reg-input--error" : ""}`}
-                    type="text" name="first_name" placeholder="First name"
-                    value={formData.first_name} onChange={handleChange} disabled={isLoading}
-                  />
-                  {errors.first_name && <span className="reg-error-text">{errors.first_name}</span>}
-                </div>
-
-                <div className="reg-field">
-                  <label>Last Name *</label>
-                  <input
-                    className={`reg-input${errors.last_name ? " reg-input--error" : ""}`}
-                    type="text" name="last_name" placeholder="Last name"
-                    value={formData.last_name} onChange={handleChange} disabled={isLoading}
-                  />
-                  {errors.last_name && <span className="reg-error-text">{errors.last_name}</span>}
-                </div>
-
-                <div className="reg-field reg-field--full">
-                  <label>Email Address *</label>
-                  <input
-                    className={`reg-input${errors.email ? " reg-input--error" : ""}`}
-                    type="email" name="email" placeholder="you@example.com"
-                    value={formData.email} onChange={handleChange} disabled={isLoading}
-                  />
-                  {errors.email && <span className="reg-error-text">{errors.email}</span>}
-                </div>
-
-                <div className="reg-field">
-                  <label>Password *</label>
-                  <input
-                    className={`reg-input${errors.password ? " reg-input--error" : ""}`}
-                    type="password" name="password" placeholder="Create a password"
-                    value={formData.password} onChange={handleChange} disabled={isLoading}
-                  />
-                  {errors.password
-                    ? <span className="reg-error-text">{errors.password}</span>
-                    : <span className="reg-help-text">8+ chars, upper, lower & number</span>
-                  }
-                </div>
-
-                <div className="reg-field">
-                  <label>Confirm Password *</label>
-                  <input
-                    className={`reg-input${errors.confirmPassword ? " reg-input--error" : ""}`}
-                    type="password" name="confirmPassword" placeholder="Confirm password"
-                    value={formData.confirmPassword} onChange={handleChange} disabled={isLoading}
-                  />
-                  {errors.confirmPassword && <span className="reg-error-text">{errors.confirmPassword}</span>}
-                </div>
-
-                <div className="reg-field reg-field--full">
-                  <label>I am a *</label>
-                  {errors.role && <span className="reg-error-text">{errors.role}</span>}
-                  <div className="reg-role-grid" style={{marginTop:4}}>
-                    <div
-                      className={`reg-role-opt${formData.role === "job_seeker" ? " reg-role-opt--active" : ""}`}
-                      onClick={() => { if (!isLoading) setFormData(p => ({...p, role:"job_seeker"})); }}
-                    >
-                      <div className="reg-role-icon">🔍</div>
-                      <div className="reg-role-title">Job Seeker</div>
-                      <div className="reg-role-sub">Looking for opportunities</div>
-                    </div>
-                    <div
-                      className={`reg-role-opt${formData.role === "hr" ? " reg-role-opt--active" : ""}`}
-                      onClick={() => { if (!isLoading) setFormData(p => ({...p, role:"hr"})); }}
-                    >
-                      <div className="reg-role-icon">🏢</div>
-                      <div className="reg-role-title">HR Professional</div>
-                      <div className="reg-role-sub">Hiring candidates</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button type="submit" className="reg-submit" disabled={isLoading}>
-                {isLoading ? "Sending OTP..." : "Continue →"}
-              </button>
-            </form>
+            {/* ── Google Sign Up Button ── */}
+            <div className="reg-google-wrap">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text="signup_with"
+                shape="rectangular"
+                theme="outline"
+                size="large"
+                width="100%"
+                disabled={isLoading || isGoogleLoading}
+              />
+            </div>
 
             <div className="reg-divider">
               <div className="reg-divider-line"/>
@@ -493,11 +398,72 @@ const Register = () => {
               <div className="reg-divider-line"/>
             </div>
 
+            <form onSubmit={handleFormSubmit}>
+              <div className="reg-field-grid">
+                <div className="reg-field">
+                  <label>First Name *</label>
+                  <input className={`reg-input${errors.first_name ? " reg-input--error" : ""}`}
+                    type="text" name="first_name" placeholder="First name"
+                    value={formData.first_name} onChange={handleChange} disabled={isLoading}/>
+                  {errors.first_name && <span className="reg-error-text">{errors.first_name}</span>}
+                </div>
+                <div className="reg-field">
+                  <label>Last Name *</label>
+                  <input className={`reg-input${errors.last_name ? " reg-input--error" : ""}`}
+                    type="text" name="last_name" placeholder="Last name"
+                    value={formData.last_name} onChange={handleChange} disabled={isLoading}/>
+                  {errors.last_name && <span className="reg-error-text">{errors.last_name}</span>}
+                </div>
+                <div className="reg-field reg-field--full">
+                  <label>Email Address *</label>
+                  <input className={`reg-input${errors.email ? " reg-input--error" : ""}`}
+                    type="email" name="email" placeholder="you@example.com"
+                    value={formData.email} onChange={handleChange} disabled={isLoading}/>
+                  {errors.email && <span className="reg-error-text">{errors.email}</span>}
+                </div>
+                <div className="reg-field">
+                  <label>Password *</label>
+                  <input className={`reg-input${errors.password ? " reg-input--error" : ""}`}
+                    type="password" name="password" placeholder="Create a password"
+                    value={formData.password} onChange={handleChange} disabled={isLoading}/>
+                  {errors.password
+                    ? <span className="reg-error-text">{errors.password}</span>
+                    : <span className="reg-help-text">8+ chars, upper, lower & number</span>}
+                </div>
+                <div className="reg-field">
+                  <label>Confirm Password *</label>
+                  <input className={`reg-input${errors.confirmPassword ? " reg-input--error" : ""}`}
+                    type="password" name="confirmPassword" placeholder="Confirm password"
+                    value={formData.confirmPassword} onChange={handleChange} disabled={isLoading}/>
+                  {errors.confirmPassword && <span className="reg-error-text">{errors.confirmPassword}</span>}
+                </div>
+                <div className="reg-field reg-field--full">
+                  <label>I am a *</label>
+                  {errors.role && <span className="reg-error-text">{errors.role}</span>}
+                  <div className="reg-role-grid" style={{marginTop:4}}>
+                    <div className={`reg-role-opt${formData.role === "job_seeker" ? " reg-role-opt--active" : ""}`}
+                      onClick={() => { if (!isLoading) setFormData(p => ({...p, role:"job_seeker"})); }}>
+                      <div className="reg-role-icon">🔍</div>
+                      <div className="reg-role-title">Job Seeker</div>
+                      <div className="reg-role-sub">Looking for opportunities</div>
+                    </div>
+                    <div className={`reg-role-opt${formData.role === "hr" ? " reg-role-opt--active" : ""}`}
+                      onClick={() => { if (!isLoading) setFormData(p => ({...p, role:"hr"})); }}>
+                      <div className="reg-role-icon">🏢</div>
+                      <div className="reg-role-title">HR Professional</div>
+                      <div className="reg-role-sub">Hiring candidates</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" className="reg-submit" disabled={isLoading || isGoogleLoading}>
+                {isLoading ? "Sending OTP..." : "Continue →"}
+              </button>
+            </form>
+
             <p className="reg-footer-text">
               Already have an account?{" "}
-              <button className="reg-link" onClick={() => navigate("/login")} disabled={isLoading}>
-                Sign In
-              </button>
+              <button className="reg-link" onClick={() => navigate("/login")} disabled={isLoading}>Sign In</button>
             </p>
           </>
         )}

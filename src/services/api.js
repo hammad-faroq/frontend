@@ -1,5 +1,5 @@
 import axios from "axios";
-const IS_PRODUCTION = true;
+const IS_PRODUCTION = false;
 
 const BASE_URL = IS_PRODUCTION
   ? "https://backendfyp-production-ec69.up.railway.app"
@@ -42,6 +42,26 @@ export const requireAuth = () => {
   const token = localStorage.getItem("token");
   if (!token) {
     window.location.href = "/login";
+  }
+};
+
+export const googleAuth = async (idToken) => {
+  try {
+    const response = await fetch(`${BASE_URL}/accounts/google-auth/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_token: idToken }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("user_role", data.role);
+      localStorage.setItem("is_superuser", data.is_superuser);
+    }
+    return { ...data, ok: response.ok };
+  } catch (error) {
+    throw new Error("Network error.");
   }
 };
 
