@@ -175,7 +175,7 @@ const profileToForm = (p) => ({
 
 const calcCompletion = (p) => {
   if (!p) return 0;
-  const fields = [p.nick_name, p.gender, p.country, p.phone_number, p.job_title, p.bio, p.profile_picture];
+  const fields = [p.nick_name, p.gender, p.country, p.phone_number, p.job_title, p.bio, p.profile_picture || p.google_picture_url]
   return Math.round((fields.filter(Boolean).length / fields.length) * 100);
 };
 
@@ -269,14 +269,15 @@ function ProfilePage() {
   };
 
   const getAvatarSrc = () => {
-    if (avatarPreview) return avatarPreview;
-    if (profile?.profile_picture) {
-      return profile.profile_picture.startsWith("http")
-        ? profile.profile_picture
-        : `${BASE_URL}${profile.profile_picture}`;
-    }
-    return null;
-  };
+  if (avatarPreview) return avatarPreview;
+  if (profile?.profile_picture) {
+    return profile.profile_picture.startsWith("http")
+      ? profile.profile_picture
+      : `${BASE_URL}${profile.profile_picture}`;
+  }
+  if (profile?.google_picture_url) return profile.google_picture_url; // ✅ add this
+  return null;
+};
 
   if (loading) {
     return (
@@ -335,7 +336,11 @@ function ProfilePage() {
           </div>
           <div className="pp-stat">
             <div className="pp-stat-icon" style={{background:"#f5f3ff"}}>📅</div>
-            <div><div className="pp-stat-label">Member Since</div><div className="pp-stat-val">2026</div></div>
+            <div><div className="pp-stat-label">Member Since</div><div className="pp-stat-val">
+            {profile?.created_at 
+              ? new Date(profile.created_at).getFullYear() 
+              : "—"}
+          </div></div>
           </div>
         </div>
       </div>
@@ -362,7 +367,9 @@ function ProfilePage() {
           <p className="pp-name">{fullName}</p>
           <p className="pp-email">{profile.email}</p>
           <div style={{display:"flex",justifyContent:"center",marginBottom:20}}>
-            <span className="pp-role-chip">💼 Job Seeker</span>
+            <span className="pp-role-chip">
+            {localStorage.getItem("user_role") === "hr" ? "🏢 HR" : "💼 Job Seeker"}
+          </span>
           </div>
 
           <div style={{marginBottom:6,display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".5px",color:"#9ca3af"}}>

@@ -92,7 +92,9 @@ export const NotificationProvider = ({ children }) => {
   };
 
   useEffect(() => {
-  fetchNotifications(); // fetch once on mount
+  const token = localStorage.getItem('token');
+  if (!token) return; // ✅ Don't fetch if not logged in
+  fetchNotifications();
 }, [fetchNotifications]);
 
   const value = {

@@ -122,7 +122,7 @@ function AppContent() {
 
       </Route>
 
-        <Route path="/hr/job/:jobId" element={<ProtectedRoute><HRJobApplications /></ProtectedRoute>} />
+        <Route path="/hr/job/:jobId" element={<ProtectedRoute allowedRoles={["hr"]}><HRJobApplications /></ProtectedRoute>} />
         {/* 🔥 MAIN LAYOUT WRAPPER (SIDEBAR AREA) */}
         <Route element={<MainLayout />}>
 
@@ -152,14 +152,14 @@ function AppContent() {
           <Route path="/resume-upload" element={<ResumeUpload />} />
 
           {/* JOB SEEKER */}
-          <Route path="/jobseeker/dashboard" element={<JobSeekerDashboard />} />
-          <Route path="/jobseeker/jobs" element={<JobSeekerJobs />} />
-          <Route path="/jobseeker/applications" element={<JobSeekerApplications />} />
+          <Route path="/jobseeker/dashboard" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerDashboard /></ProtectedRoute>} />
+          <Route path="/jobseeker/jobs" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerJobs /></ProtectedRoute>} />
+          <Route path="/jobseeker/applications" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerApplications /></ProtectedRoute>} />
           <Route path="/jobseeker/profile" element={<JobSeekerProfile />} />
           <Route path="/jobseeker/settings" element={<JobSeekerSettings />} />
-          <Route path="/jobseeker/analysis" element={<JobSeekerAnalysis />} />
-          <Route path="/jobseeker/interviews" element={<JobSeekerInterviews />} />
-          <Route path="/jobseeker/upload-resume" element={<JobSeekerUploadResume />} />
+          <Route path="/jobseeker/analysis" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerAnalysis /></ProtectedRoute>} />
+          <Route path="/jobseeker/interviews" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerInterviews /></ProtectedRoute>} />
+          <Route path="/jobseeker/upload-resume" element={<ProtectedRoute allowedRoles={["job_seeker"]}><JobSeekerUploadResume /></ProtectedRoute>} />
           <Route path="/jobseeker/similar-jobs" element={<SimilarJobs />} />
 
           {/* INTERVIEW */}
@@ -168,20 +168,20 @@ function AppContent() {
           <Route path="/interview/:interviewId/result" element={<InterviewResult />} />
           <Route path="/preparation" element={<PreparationModules />} />
 
-          <Route path="/jobseeker/interview-prep" element={<InterviewPreparation />} />
-          <Route path="/jobseeker/interview/:interviewId/start" element={<CandidateInterviewStart />} />
-          <Route path="/jobseeker/interview/:interviewId/questions" element={<CandidateInterviewQuestions />} />
-          <Route path="/jobseeker/interview/:interviewId/result" element={<CandidateInterviewResult />} />
+          <Route path="/jobseeker/interview-prep" element={<ProtectedRoute allowedRoles={["job_seeker"]}><InterviewPreparation /></ProtectedRoute>} />
+          <Route path="/jobseeker/interview/:interviewId/start" element={<ProtectedRoute allowedRoles={["job_seeker"]}><CandidateInterviewStart /></ProtectedRoute>} />
+          <Route path="/jobseeker/interview/:interviewId/questions" element={<ProtectedRoute allowedRoles={["job_seeker"]}><CandidateInterviewQuestions /></ProtectedRoute>} />
+          <Route path="/jobseeker/interview/:interviewId/result" element={<ProtectedRoute allowedRoles={["job_seeker"]}><CandidateInterviewResult /></ProtectedRoute>} />
 
           {/* HR */}
-          <Route path="/hr/dashboard" element={<ProtectedRoute><HRDashboardWrapper /></ProtectedRoute>} />
-          <Route path="/hr/analytics" element={<ProtectedRoute><HRAnalytics /></ProtectedRoute>} />
+          <Route path="/hr/dashboard" element={<ProtectedRoute allowedRoles={["hr"]}><HRDashboardWrapper /></ProtectedRoute>} />
+          <Route path="/hr/analytics" element={<ProtectedRoute allowedRoles={["hr"]}><HRAnalytics /></ProtectedRoute>} />
           
 
-          <Route path="/hr/interviews/schedule" element={<ProtectedRoute><ScheduleInterview /></ProtectedRoute>} />
-          <Route path="/hr/interview/:interviewId/start" element={<ProtectedRoute><HRStartInterview /></ProtectedRoute>} />
-          <Route path="/hr/interview/:interviewId/review" element={<ProtectedRoute><ReviewAnswers /></ProtectedRoute>} />
-          <Route path="/hr/interview/:interviewId/finalize" element={<ProtectedRoute><FinalizeInterview /></ProtectedRoute>} />
+          <Route path="/hr/interviews/schedule" element={<ProtectedRoute allowedRoles={["hr"]}><ScheduleInterview /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/start" element={<ProtectedRoute allowedRoles={["hr"]}><HRStartInterview /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/review" element={<ProtectedRoute allowedRoles={["hr"]}><ReviewAnswers /></ProtectedRoute>} />
+          <Route path="/hr/interview/:interviewId/finalize" element={<ProtectedRoute allowedRoles={["hr"]}><FinalizeInterview /></ProtectedRoute>} />
 
         </Route>
 

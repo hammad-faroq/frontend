@@ -1,5 +1,5 @@
 import axios from "axios";
-const IS_PRODUCTION = false;
+const IS_PRODUCTION = true;
 
 const BASE_URL = IS_PRODUCTION
   ? "https://backendfyp-production-ec69.up.railway.app"
@@ -45,17 +45,21 @@ export const requireAuth = () => {
   }
 };
 
-export const googleAuth = async (idToken) => {
+export const googleAuth = async (accessToken, role = null) => {
   try {
+    const body = { access_token: accessToken };
+    if (role) body.role = role;
+
     const response = await fetch(`${BASE_URL}/accounts/google-auth/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id_token: idToken }),
+      body: JSON.stringify(body),
     });
     const data = await response.json();
-    if (response.ok) {
+    if (response.ok && data.token) {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("role", data.role);
       localStorage.setItem("user_role", data.role);
       localStorage.setItem("is_superuser", data.is_superuser);
     }
@@ -115,6 +119,7 @@ export const loginUser = async (email, password) => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("user_id", data.user_id);
       localStorage.setItem("user_role", data.role);
+      localStorage.setItem("role", data.role);  // ← add this
       localStorage.setItem("is_superuser", data.is_superuser);
     }
 
