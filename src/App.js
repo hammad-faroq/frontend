@@ -134,7 +134,7 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-        <Route path="/help" element={<Help />} />
+        <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
 
           {/* USER CORE */}
           <Route path="/matches" element={<ProtectedRoute><MatchesPage /></ProtectedRoute>} />
